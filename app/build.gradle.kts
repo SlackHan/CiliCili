@@ -14,10 +14,33 @@ android {
         applicationId = "com.lanhan.cilicili"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.2.1"
+        versionCode = 5
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    val releaseStorePath = System.getenv("RELEASE_STORE_FILE").orEmpty().trim()
+    val releaseStorePassword = System.getenv("RELEASE_STORE_PASSWORD").orEmpty()
+    val releaseKeyAlias = System.getenv("RELEASE_KEY_ALIAS").orEmpty().trim()
+    val releaseKeyPassword = System.getenv("RELEASE_KEY_PASSWORD").orEmpty()
+    val hasReleaseSigning = releaseStorePath.isNotBlank() &&
+        releaseStorePassword.isNotBlank() &&
+        releaseKeyAlias.isNotBlank() &&
+        releaseKeyPassword.isNotBlank() &&
+        file(releaseStorePath).exists()
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStorePath)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                enableV1Signing = true
+                enableV2Signing = true
+            }
+        }
     }
 
     buildTypes {
@@ -28,9 +51,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Sign release builds with debug key by default so user can sideload directly if needed;
-            // replace with a dedicated keystore when distributing.
-            signingConfig = signingConfigs.getByName("debug")
+            // Sign release builds with dedicated keystore when provided via env vars,
+            // falling back to debug key so local/CI builds remain directly sideloadable.
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 

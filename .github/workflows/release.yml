@@ -1,0 +1,138 @@
+name: Build & Publish Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to attach APK to (defaults to latest v* tag)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          elif [ -n "$INPUT_TAG" ]; then
+            TAG_NAME="$INPUT_TAG"
+          else
+            TAG_NAME="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)"
+            if [ -z "$TAG_NAME" ]; then
+              VER="$(grep -m1 'versionName' app/build.gradle.kts | cut -d'"' -f2)"
+              TAG_NAME="v${VER}"
+            fi
+          fi
+          echo "TAG_NAME=${TAG_NAME}" >> "$GITHUB_ENV"
+          echo "Resolved release tag: ${TAG_NAME}"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Prepare optional release signing keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          STORE_PASS: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$STORE_PASS" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASS" ]; then
+            printf '%s' "$KEYSTORE_B64" | tr -d '[:space:]' | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+            echo "RELEASE_STORE_FILE=$RUNNER_TEMP/release-keystore.jks" >> "$GITHUB_ENV"
+            echo "SIGNING_MODE=release" >> "$GITHUB_ENV"
+            echo "Using dedicated release keystore from GitHub Secrets."
+          else
+            echo "SIGNING_MODE=debug" >> "$GITHUB_ENV"
+            echo "No release keystore secrets configured; falling back to CI debug key."
+          fi
+
+      - name: Run unit tests & assemble release APK
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: gradle testDebugUnitTest assembleRelease --no-daemon
+
+      - name: Package APK & generate release notes
+        run: |
+          mkdir -p dist
+          APK_NAME="CiliCili-${TAG_NAME}.apk"
+          cp "app/build/outputs/apk/release/app-release.apk" "dist/${APK_NAME}"
+          (cd dist && sha256sum "${APK_NAME}" > SHA256SUMS.txt)
+          SHA256="$(awk '{print $1}' dist/SHA256SUMS.txt)"
+
+          END_REF="HEAD"
+          if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+            END_REF="$TAG_NAME"
+          fi
+          PREV_TAG="$(git describe --tags --abbrev=0 "${END_REF}^" --match 'v*' 2>/dev/null || true)"
+          if [ -n "$PREV_TAG" ]; then
+            CHANGES="$(git log "${PREV_TAG}..${END_REF}" --no-merges --pretty=format:'- %s (`%h`)' || true)"
+          else
+            CHANGES="$(git log -n 10 --no-merges --pretty=format:'- %s (`%h`)' || true)"
+          fi
+          if [ -z "$CHANGES" ]; then
+            CHANGES="- Routine release build for ${TAG_NAME}"
+          fi
+
+          if [ "$SIGNING_MODE" = "release" ]; then
+            SIGNING_NOTE="使用仓库配置的固定 Release 签名证书签名，支持直接覆盖升级安装。"
+          else
+            SIGNING_NOTE="当前使用 GitHub Actions 临时 Debug 密钥签名（首次可直接侧载安装；若提示签名冲突，请先卸载旧版再安装）。"
+          fi
+
+          {
+            echo "## CiliCili ${TAG_NAME}"
+            echo ""
+            echo "### 安装说明"
+            echo "- 在下方 **Assets** 中下载 \`${APK_NAME}\` 即可在 Android 手机直接安装。"
+            echo "- ${SIGNING_NOTE}"
+            echo ""
+            echo "### 校验信息"
+            echo "- **SHA-256**: \`${SHA256}\`"
+            echo ""
+            echo "### 变更记录"
+            echo "${CHANGES}"
+          } > dist/release_notes.md
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK_PATH="dist/CiliCili-${TAG_NAME}.apk"
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" "$APK_PATH" "dist/SHA256SUMS.txt" --clobber
+            gh release edit "$TAG_NAME" --notes-file dist/release_notes.md
+          else
+            gh release create "$TAG_NAME" "$APK_PATH" "dist/SHA256SUMS.txt" \
+              --title "CiliCili ${TAG_NAME}" \
+              --notes-file dist/release_notes.md
+          fi
+
+      - name: Clean up temporary keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release-keystore.jks"

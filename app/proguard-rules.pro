@@ -7,8 +7,8 @@
 -keepclasseswithmembers class kotlinx.serialization.json.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
--keep,includedescriptorclasses class com.lanhan.cilicili.domain.model.**$$serializer { *; }
--keepclassmembers class com.lanhan.cilicili.domain.model.** {
+-keep,includedescriptorclasses class com.lanhan.cilicili.**$$serializer { *; }
+-keepclassmembers class com.lanhan.cilicili.** {
     *** Companion;
 }
 
