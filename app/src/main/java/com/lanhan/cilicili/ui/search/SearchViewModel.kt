@@ -7,9 +7,11 @@ import com.lanhan.cilicili.AppContainer
 import com.lanhan.cilicili.data.local.SearchHistoryEntity
 import com.lanhan.cilicili.domain.model.AggregatedMagnetItem
 import com.lanhan.cilicili.domain.model.DefaultResultAction
+import com.lanhan.cilicili.domain.model.DohProvider
 import com.lanhan.cilicili.domain.model.MinSizeFilter
 import com.lanhan.cilicili.domain.model.RawSiteResult
 import com.lanhan.cilicili.domain.model.SiteExecutionState
+import com.lanhan.cilicili.domain.model.SiteHealthStatus
 import com.lanhan.cilicili.domain.model.SiteRule
 import com.lanhan.cilicili.domain.model.SiteSearchStatus
 import com.lanhan.cilicili.domain.model.SortOption
@@ -47,6 +49,11 @@ sealed interface SearchEffect {
     data class Message(val text: String) : SearchEffect
 }
 
+data class SiteSignalBar(
+    val status: SiteHealthStatus,
+    val latencyMs: Long?,
+)
+
 data class SearchUiState(
     val query: String = "",
     val activeKeyword: String = "",
@@ -62,6 +69,11 @@ data class SearchUiState(
     val history: List<String> = emptyList(),
     val incognitoMode: Boolean = false,
     val defaultAction: DefaultResultAction = DefaultResultAction.ASK,
+    val dohProvider: DohProvider = DohProvider.SYSTEM,
+    val totalSiteCount: Int = 0,
+    val enabledSiteCount: Int = 0,
+    val healthySiteCount: Int = 0,
+    val signalBars: List<SiteSignalBar> = emptyList(),
     val sheetItem: AggregatedMagnetItem? = null,
     val cfChallengeTarget: CfChallengeTarget? = null,
 )
@@ -110,6 +122,7 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         settingsFlow,
         _sheetItem,
         _cfTarget,
+        allRulesFlow,
     ) { values ->
         val query = values[0] as String
         val activeKeyword = values[1] as String
@@ -128,9 +141,28 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         val settings = values[11] as com.lanhan.cilicili.data.local.AppSettings
         val sheetItem = values[12] as AggregatedMagnetItem?
         val cfTarget = values[13] as CfChallengeTarget?
+        @Suppress("UNCHECKED_CAST")
+        val allRules = values[14] as List<SiteRule>
 
         val aggregated = SearchOrchestrator.aggregateAndDeduplicate(rawResults)
         val filtered = applyFilterAndSort(aggregated, minSizeFilter, sortOption)
+
+        val signalSample = allRules
+            .sortedWith(
+                compareBy<SiteRule>(
+                    {
+                        when (it.healthStatus) {
+                            SiteHealthStatus.OK -> 0
+                            SiteHealthStatus.CF_CHALLENGE -> 1
+                            SiteHealthStatus.UNKNOWN -> 2
+                            else -> 3
+                        }
+                    },
+                    { it.lastLatencyMs ?: Long.MAX_VALUE },
+                ),
+            )
+            .take(7)
+            .map { SiteSignalBar(status = it.healthStatus, latencyMs = it.lastLatencyMs) }
 
         SearchUiState(
             query = query,
@@ -147,6 +179,11 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
             history = historyEntities.map { it.keyword },
             incognitoMode = settings.incognitoMode,
             defaultAction = settings.defaultAction,
+            dohProvider = settings.dohProvider,
+            totalSiteCount = allRules.size,
+            enabledSiteCount = allRules.count { it.enabled },
+            healthySiteCount = allRules.count { it.healthStatus == SiteHealthStatus.OK },
+            signalBars = signalSample,
             sheetItem = sheetItem,
             cfChallengeTarget = cfTarget,
         )

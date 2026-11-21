@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
     val verifiedCfHostCount: Int = 0,
+    val historyCount: Int = 0,
 )
 
 class SettingsViewModel(private val container: AppContainer) : ViewModel() {
@@ -29,10 +30,12 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
     val uiState: StateFlow<SettingsUiState> = combine(
         container.settingsRepository.settingsFlow,
         container.sessionStore.verifiedHostsFlow,
-    ) { settings, hosts ->
+        container.searchHistoryDao.observeRecent(),
+    ) { settings, hosts, history ->
         SettingsUiState(
             settings = settings,
             verifiedCfHostCount = hosts.size,
+            historyCount = history.size,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 

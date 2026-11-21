@@ -3,14 +3,18 @@ package com.lanhan.cilicili.ui.sites
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,24 +24,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -45,7 +44,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,16 +54,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lanhan.cilicili.domain.model.SiteHealthStatus
 import com.lanhan.cilicili.domain.model.SiteRule
 import com.lanhan.cilicili.domain.model.SiteSourceType
-import com.lanhan.cilicili.ui.components.CiliIcons
 import com.lanhan.cilicili.ui.components.CloudflareVerifyDialog
+import com.lanhan.cilicili.ui.components.InstrumentHairline
+import com.lanhan.cilicili.ui.components.InstrumentSwitch
+import com.lanhan.cilicili.ui.components.InstrumentTopBar
+import com.lanhan.cilicili.ui.theme.InstrumentTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +83,7 @@ fun SitesScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val c = InstrumentTheme.colors
 
     var showMoreMenu by remember { mutableStateOf(false) }
     var showHealthDialog by remember { mutableStateOf(false) }
@@ -96,178 +104,409 @@ fun SitesScreen(
         }
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        // Top Summary & Action Bar
-        val enabledCount = state.allRules.count { it.enabled }
-        val healthyCount = state.allRules.count { it.healthStatus == SiteHealthStatus.OK }
-        val cfCount = state.allRules.count { it.healthStatus == SiteHealthStatus.CF_CHALLENGE }
+    val totalCount = state.allRules.size
+    val enabledCount = state.allRules.count { it.enabled }
+    val healthyCount = state.allRules.count { it.healthStatus == SiteHealthStatus.OK }
+    val cfCount = state.allRules.count { it.healthStatus == SiteHealthStatus.CF_CHALLENGE }
+    val otherCount = (totalCount - healthyCount - cfCount).coerceAtLeast(0)
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(c.bg),
+    ) {
+        // Top Strip
+        InstrumentTopBar(
+            leading = {
                 Text(
-                    text = "磁力站点 (${state.allRules.size})",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    text = "节点",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = c.text,
                 )
-                Text(
-                    text = "已启用 $enabledCount · 可用 $healthyCount · 需过盾 $cfCount",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            IconButton(onClick = { showAddApiDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "添加聚合源")
-            }
-            Button(
-                onClick = {
-                    if (state.isCheckingHealth) viewModel.cancelHealthCheck() else showHealthDialog = true
-                },
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                Icon(CiliIcons.SpeedTest, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(if (state.isCheckingHealth) "停止" else "一键测活")
-            }
-            Box {
-                IconButton(onClick = { showMoreMenu = true }) {
-                    Icon(Icons.Default.MoreVert, contentDescription = "更多操作")
-                }
-                DropdownMenu(
-                    expanded = showMoreMenu,
-                    onDismissRequest = { showMoreMenu = false },
+            },
+            trailing = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    DropdownMenuItem(
-                        text = { Text("添加 Prowlarr / Torznab 源") },
-                        onClick = {
-                            showMoreMenu = false
-                            showAddApiDialog = true
-                        },
-                    )
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("仅启用可用站点") },
-                        onClick = {
-                            showMoreMenu = false
-                            viewModel.enableOnlyHealthy()
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("全部启用") },
-                        onClick = {
-                            showMoreMenu = false
-                            viewModel.enableAll()
-                        },
-                    )
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("导入 JSON 规则") },
-                        onClick = {
-                            showMoreMenu = false
-                            showImportJsonDialog = true
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("远程订阅更新") },
-                        onClick = {
-                            showMoreMenu = false
-                            showSubscriptionDialog = true
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("导出 JSON 到剪贴板") },
-                        onClick = {
-                            showMoreMenu = false
-                            viewModel.exportJson()
-                        },
-                    )
-                    HorizontalDivider()
-                    DropdownMenuItem(
-                        text = { Text("重置为内置 39 条规则") },
-                        onClick = {
-                            showMoreMenu = false
-                            viewModel.resetDefaults()
-                        },
-                    )
-                }
-            }
-        }
+                    Surface(
+                        onClick = { showAddApiDialog = true },
+                        shape = RoundedCornerShape(6.dp),
+                        color = c.chip,
+                        border = BorderStroke(1.dp, c.hairline),
+                    ) {
+                        Box(
+                            modifier = Modifier.size(32.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "+",
+                                fontSize = 16.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = c.text,
+                            )
+                        }
+                    }
 
-        // Health Check Progress Banner
-        state.healthProgress?.takeIf { state.isCheckingHealth }?.let { prog ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-            ) {
-                LinearProgressIndicator(
-                    progress = {
-                        if (prog.total > 0) prog.completed.toFloat() / prog.total else 0f
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "正在测活 ${prog.completed}/${prog.total} · ${prog.lastCheckedSite}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-
-        // Quick Search & Filter Chips
-        OutlinedTextField(
-            value = state.searchQuery,
-            onValueChange = viewModel::setSearchQuery,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            placeholder = { Text("筛选站点名或域名...") },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            trailingIcon = {
-                if (state.searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                        Icon(Icons.Default.Close, contentDescription = "清除")
+                    Surface(
+                        onClick = {
+                            if (state.isCheckingHealth) viewModel.cancelHealthCheck() else showHealthDialog = true
+                        },
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (state.isCheckingHealth) c.activeBg else c.accent,
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .height(32.dp)
+                                .padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(if (state.isCheckingHealth) c.accent else c.onAccent),
+                            )
+                            Text(
+                                text = if (state.isCheckingHealth) "停止" else "全部测活",
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (state.isCheckingHealth) c.activeText else c.onAccent,
+                            )
+                        }
                     }
                 }
             },
         )
 
-        Row(
+        // Global Health Summary + Filter Area
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            SiteFilterTab.entries.forEach { tab ->
-                FilterChip(
-                    selected = state.activeFilter == tab,
-                    onClick = { viewModel.setFilter(tab) },
-                    label = { Text(tab.label) },
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = healthyCount.toString().padStart(2, '0'),
+                        fontSize = 26.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = c.text,
+                    )
+                    Text(
+                        text = "/ ${totalCount.toString().padStart(2, '0')} 可用 · 启用 $enabledCount",
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = c.muted,
+                        modifier = Modifier.padding(bottom = 3.dp),
+                    )
+                }
+
+                // Shape + Color Legend
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 3.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(c.ok))
+                        Text("$healthyCount", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = c.text)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(modifier = Modifier.size(6.dp).rotate(45f).background(c.warn))
+                        Text("$cfCount", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = c.text)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .border(1.dp, c.muted, RoundedCornerShape(1.dp)),
+                        )
+                        Text("$otherCount", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = c.muted)
+                    }
+                }
+            }
+
+            // 6dp Segmented Proportional Health Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(c.track),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                if (healthyCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(healthyCount.toFloat())
+                            .background(c.ok),
+                    )
+                }
+                if (cfCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(cfCount.toFloat())
+                            .background(c.warn),
+                    )
+                }
+                if (otherCount > 0 || totalCount == 0) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(otherCount.coerceAtLeast(1).toFloat())
+                            .background(c.fail),
+                    )
+                }
+            }
+
+            // Live Health Check Progress
+            state.healthProgress?.takeIf { state.isCheckingHealth }?.let { prog ->
+                val fraction = if (prog.total > 0) prog.completed.toFloat() / prog.total else 0f
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = "正在探测 ${prog.completed}/${prog.total} · ${prog.lastCheckedSite}",
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = c.muted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = "${(fraction * 100).toInt()}%",
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = c.accent,
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { fraction },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp),
+                        color = c.accent,
+                        trackColor = c.track,
+                    )
+                }
+            }
+
+            // Compact Search Input + More Menu
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(6.dp),
+                    color = c.panel,
+                    border = BorderStroke(1.dp, c.hairline),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .height(36.dp)
+                            .padding(horizontal = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = "/",
+                            fontSize = 13.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = c.muted,
+                        )
+                        BasicTextField(
+                            value = state.searchQuery,
+                            onValueChange = viewModel::setSearchQuery,
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            textStyle = TextStyle(fontSize = 13.sp, color = c.text),
+                            cursorBrush = SolidColor(c.accent),
+                            decorationBox = { inner ->
+                                Box(contentAlignment = Alignment.CenterStart) {
+                                    if (state.searchQuery.isEmpty()) {
+                                        Text("过滤站点或域名...", fontSize = 13.sp, color = c.muted)
+                                    }
+                                    inner()
+                                }
+                            },
+                        )
+                        if (state.searchQuery.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .size(26.dp)
+                                    .clickable { viewModel.setSearchQuery("") },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("×", fontSize = 14.sp, fontFamily = FontFamily.Monospace, color = c.muted)
+                            }
+                        }
+                    }
+                }
+
+                Box {
+                    Surface(
+                        onClick = { showMoreMenu = true },
+                        shape = RoundedCornerShape(6.dp),
+                        color = c.chip,
+                        border = BorderStroke(1.dp, c.hairline),
+                    ) {
+                        Box(
+                            modifier = Modifier.size(36.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("⋮", fontSize = 16.sp, fontFamily = FontFamily.Monospace, color = c.text)
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = showMoreMenu,
+                        onDismissRequest = { showMoreMenu = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("添加 Prowlarr / Torznab 源") },
+                            onClick = {
+                                showMoreMenu = false
+                                showAddApiDialog = true
+                            },
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("仅启用可用站点") },
+                            onClick = {
+                                showMoreMenu = false
+                                viewModel.enableOnlyHealthy()
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("全部启用") },
+                            onClick = {
+                                showMoreMenu = false
+                                viewModel.enableAll()
+                            },
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("导入 JSON 规则") },
+                            onClick = {
+                                showMoreMenu = false
+                                showImportJsonDialog = true
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("远程订阅更新") },
+                            onClick = {
+                                showMoreMenu = false
+                                showSubscriptionDialog = true
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("导出 JSON 到剪贴板") },
+                            onClick = {
+                                showMoreMenu = false
+                                viewModel.exportJson()
+                            },
+                        )
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("重置为内置规则") },
+                            onClick = {
+                                showMoreMenu = false
+                                viewModel.resetDefaults()
+                            },
+                        )
+                    }
+                }
+            }
+
+            // 5-State Filter Tabs (Neutral High-Contrast Active)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                SiteFilterTab.entries.forEach { tab ->
+                    val selected = state.activeFilter == tab
+                    val shortTabLabel = when (tab) {
+                        SiteFilterTab.ALL -> "全部"
+                        SiteFilterTab.ENABLED -> "启用"
+                        SiteFilterTab.HEALTHY -> "可用"
+                        SiteFilterTab.CF_CHALLENGE -> "过盾"
+                        SiteFilterTab.FAILED -> "失效"
+                    }
+                    Surface(
+                        onClick = { viewModel.setFilter(tab) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (selected) c.activeBg else c.panel,
+                        border = BorderStroke(1.dp, if (selected) c.activeBg else c.hairline),
+                    ) {
+                        Box(
+                            modifier = Modifier.height(30.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = shortTabLabel,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (selected) c.activeText else c.text,
+                                maxLines = 1,
+                            )
+                        }
+                    }
+                }
             }
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(state.filteredRules, key = { it.id }) { rule ->
-                SiteRuleCard(
-                    rule = rule,
-                    onToggle = { enabled -> viewModel.toggleSite(rule.id, enabled) },
-                    onClick = { viewModel.openInspect(rule) },
-                    onVerifyCf = { viewModel.openCfVerifyForSite(rule) },
+        InstrumentHairline()
+
+        // Node Telemetry Rows
+        if (state.filteredRules.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "没有匹配的节点",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.muted,
                 )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 12.dp),
+            ) {
+                items(state.filteredRules, key = { it.id }) { rule ->
+                    NodeTelemetryRow(
+                        rule = rule,
+                        onToggle = { enabled -> viewModel.toggleSite(rule.id, enabled) },
+                        onClick = { viewModel.openInspect(rule) },
+                        onVerifyCf = { viewModel.openCfVerifyForSite(rule) },
+                    )
+                    InstrumentHairline()
+                }
             }
         }
     }
@@ -277,11 +516,11 @@ fun SitesScreen(
         var keyword by remember { mutableStateOf("ubuntu") }
         AlertDialog(
             onDismissRequest = { showHealthDialog = false },
-            title = { Text("一键批量测活") },
+            title = { Text("批量测活") },
             text = {
                 Column {
                     Text(
-                        text = "将并发探测全部 ${state.allRules.size} 个站点，检测域名连通性、反爬状态及 XPath 解析是否有效。",
+                        text = "并发探测全部 $totalCount 个站点，检测域名连通性、反爬状态与规则解析。",
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Spacer(modifier = Modifier.height(10.dp))
@@ -300,6 +539,10 @@ fun SitesScreen(
                         showHealthDialog = false
                         viewModel.runHealthCheck(keyword)
                     },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = c.accent,
+                        contentColor = c.onAccent,
+                    ),
                 ) {
                     Text("开始测活")
                 }
@@ -433,110 +676,141 @@ fun SitesScreen(
 }
 
 @Composable
-private fun SiteRuleCard(
+private fun NodeTelemetryRow(
     rule: SiteRule,
     onToggle: (Boolean) -> Unit,
     onClick: () -> Unit,
     onVerifyCf: () -> Unit,
 ) {
-    Card(
+    val c = InstrumentTheme.colors
+    val barColor = when (rule.healthStatus) {
+        SiteHealthStatus.OK -> c.ok
+        SiteHealthStatus.CF_CHALLENGE -> c.warn
+        else -> c.fail
+    }
+    val (symbol, codeColor) = when (rule.healthStatus) {
+        SiteHealthStatus.OK -> "●" to c.ok
+        SiteHealthStatus.CF_CHALLENGE -> "◆" to c.warn
+        SiteHealthStatus.UNKNOWN -> "○" to c.muted
+        else -> "×" to c.muted
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 11.dp)
+            .height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .width(3.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(barColor),
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
                         text = rule.name,
-                        style = MaterialTheme.typography.titleSmall,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                    )
-                    if (rule.sourceType != SiteSourceType.HTML) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.secondaryContainer,
-                            shape = RoundedCornerShape(6.dp),
-                        ) {
-                            Text(
-                                text = rule.sourceType.label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            )
-                        }
-                    }
-                    HealthBadge(status = rule.healthStatus, latencyMs = rule.lastLatencyMs)
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = rule.host.ifBlank { rule.searchUrl },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (!rule.lastErrorMessage.isNullOrBlank()) {
-                    Text(
-                        text = rule.lastErrorMessage,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (rule.enabled) c.text else c.muted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (rule.healthStatus == SiteHealthStatus.CF_CHALLENGE) {
-                    TextButton(onClick = onVerifyCf) {
-                        Text("过盾")
+                    if (rule.sourceType != SiteSourceType.HTML) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(c.chip)
+                                .border(1.dp, c.hairline, RoundedCornerShape(3.dp))
+                                .padding(horizontal = 5.dp, vertical = 1.dp),
+                        ) {
+                            Text(
+                                text = rule.sourceType.name,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = c.muted,
+                            )
+                        }
                     }
                 }
-                Switch(
-                    checked = rule.enabled,
-                    onCheckedChange = onToggle,
+                Text(
+                    text = rule.host.ifBlank { rule.searchUrl },
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                val statusLine = buildString {
+                    append("$symbol ${rule.healthStatus.label}")
+                    if (rule.lastLatencyMs != null && rule.healthStatus != SiteHealthStatus.UNKNOWN) {
+                        append(" · ${rule.lastLatencyMs}ms")
+                    }
+                }
+                Text(
+                    text = statusLine,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = if (rule.healthStatus == SiteHealthStatus.OK || rule.healthStatus == SiteHealthStatus.CF_CHALLENGE) {
+                        FontWeight.SemiBold
+                    } else {
+                        FontWeight.Normal
+                    },
+                    color = codeColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-    }
-}
 
-@Composable
-private fun HealthBadge(status: SiteHealthStatus, latencyMs: Long?) {
-    val (bg, fg) = when (status) {
-        SiteHealthStatus.OK ->
-            MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
-        SiteHealthStatus.CF_CHALLENGE ->
-            MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
-        SiteHealthStatus.HTTP_ERROR,
-        SiteHealthStatus.NETWORK_ERROR,
-        SiteHealthStatus.PARSE_ERROR ->
-            MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
-        else ->
-            MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val text = buildString {
-        append(status.label)
-        if (latencyMs != null && status != SiteHealthStatus.UNKNOWN) {
-            append(" ${latencyMs}ms")
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            if (rule.healthStatus == SiteHealthStatus.CF_CHALLENGE) {
+                Surface(
+                    onClick = onVerifyCf,
+                    shape = RoundedCornerShape(5.dp),
+                    color = c.warn.copy(alpha = 0.14f),
+                    border = BorderStroke(1.dp, c.warn),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .height(30.dp)
+                            .padding(horizontal = 9.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "过盾",
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                            color = c.warn,
+                        )
+                    }
+                }
+            }
+            InstrumentSwitch(
+                checked = rule.enabled,
+                onCheckedChange = onToggle,
+            )
         }
-    }
-    Surface(color = bg, shape = RoundedCornerShape(6.dp)) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            color = fg,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-        )
     }
 }
 
@@ -551,6 +825,7 @@ private fun SiteInspectSheet(
     onDeleteRule: () -> Unit,
     onVerifyCf: (String?) -> Unit,
 ) {
+    val c = InstrumentTheme.colors
     val site = inspectState.site
     var searchUrl by remember(site.id) { mutableStateOf(site.searchUrl) }
     var apiKey by remember(site.id) {
@@ -562,7 +837,11 @@ private fun SiteInspectSheet(
     var titleExpr by remember(site.id) { mutableStateOf(site.titleExpr) }
     var magnetExpr by remember(site.id) { mutableStateOf(site.magnetExpr) }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = c.panel,
+        contentColor = c.text,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -577,8 +856,10 @@ private fun SiteInspectSheet(
             ) {
                 Text(
                     text = "${site.name} (#${site.id})",
-                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 15.sp,
+                    fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.SemiBold,
+                    color = c.text,
                 )
                 TextButton(onClick = onDeleteRule) {
                     Text("删除规则", color = MaterialTheme.colorScheme.error)
@@ -598,40 +879,57 @@ private fun SiteInspectSheet(
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
-                Button(onClick = onRunTest, enabled = !inspectState.isTesting) {
-                    Text(if (inspectState.isTesting) "测试中" else "单站调试")
+                Button(
+                    onClick = onRunTest,
+                    enabled = !inspectState.isTesting,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = c.accent,
+                        contentColor = c.onAccent,
+                    ),
+                ) {
+                    Text(if (inspectState.isTesting) "测试中" else "调试")
                 }
             }
 
             inspectState.testSummary?.let { summary ->
                 Text(
                     text = summary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.ok,
                 )
             }
             inspectState.challengeUrl?.let { url ->
-                OutlinedButton(onClick = { onVerifyCf(url) }) {
-                    Icon(CiliIcons.Shield, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("打开 WebView 过盾后重测")
+                OutlinedButton(
+                    onClick = { onVerifyCf(url) },
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, c.warn),
+                ) {
+                    Text("打开 WebView 过盾后重测", color = c.warn)
                 }
             }
 
             if (inspectState.previewResults.isNotEmpty()) {
-                Text("解析预览（前 ${inspectState.previewResults.size} 条）：", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    text = "解析预览（前 ${inspectState.previewResults.size} 条）",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.muted,
+                )
                 inspectState.previewResults.forEach { item ->
-                    val seedLabel = item.seeders?.let { " · 做种 $it" }.orEmpty()
+                    val seedLabel = item.seeders?.let { " · ↑$it" }.orEmpty()
                     Text(
-                        text = "• ${item.title} [${item.sizeText.ifBlank { "未知大小" }}$seedLabel] ${if (item.magnetUri != null) "(直出磁力)" else "(详情页)"}",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "• ${item.title} [${item.sizeText.ifBlank { "未知大小" }}$seedLabel]",
+                        fontSize = 12.sp,
+                        color = c.text,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
 
-            HorizontalDivider()
+            InstrumentHairline()
 
             OutlinedTextField(
                 value = searchUrl,
@@ -685,8 +983,13 @@ private fun SiteInspectSheet(
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = c.accent,
+                    contentColor = c.onAccent,
+                ),
             ) {
-                Text("保存修改")
+                Text("保存修改", fontFamily = FontFamily.Monospace)
             }
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -756,9 +1059,9 @@ private fun AddApiSourceDialog(
                 }
                 Text(
                     text = if (selectedType == SiteSourceType.PROWLARR) {
-                        "将自动拼接 /api/v1/search 并附带 X-Api-Key 请求头，一次搜索汇总 Prowlarr 内全部启用站点。"
+                        "将自动拼接 /api/v1/search 并附带 X-Api-Key 请求头。"
                     } else {
-                        "兼容 Prowlarr 单索引器、Jackett 及 Bitmagnet Torznab XML 接口。"
+                        "兼容 Prowlarr 单索引器、Jackett 及 Bitmagnet Torznab 接口。"
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

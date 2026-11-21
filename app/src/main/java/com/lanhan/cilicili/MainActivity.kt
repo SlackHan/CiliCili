@@ -1,21 +1,19 @@
 package com.lanhan.cilicili
 
+import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -27,7 +25,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.lanhan.cilicili.data.local.AppSettings
-import com.lanhan.cilicili.ui.components.CiliIcons
+import com.lanhan.cilicili.domain.model.ThemeMode
+import com.lanhan.cilicili.ui.components.DockItem
+import com.lanhan.cilicili.ui.components.InstrumentDockBar
 import com.lanhan.cilicili.ui.search.SearchScreen
 import com.lanhan.cilicili.ui.search.SearchViewModel
 import com.lanhan.cilicili.ui.settings.SettingsScreen
@@ -35,11 +35,12 @@ import com.lanhan.cilicili.ui.settings.SettingsViewModel
 import com.lanhan.cilicili.ui.sites.SitesScreen
 import com.lanhan.cilicili.ui.sites.SitesViewModel
 import com.lanhan.cilicili.ui.theme.CiliTheme
+import com.lanhan.cilicili.ui.theme.InstrumentTheme
 
-private enum class TopRoute(val route: String, val label: String) {
-    SEARCH("search", "搜索"),
-    SITES("sites", "站点"),
-    SETTINGS("settings", "设置"),
+private enum class TopRoute(val route: String, val index: String, val label: String) {
+    SEARCH("search", "01", "检索"),
+    SITES("sites", "02", "节点"),
+    SETTINGS("settings", "03", "设置"),
 }
 
 class MainActivity : ComponentActivity() {
@@ -52,10 +53,22 @@ class MainActivity : ComponentActivity() {
             val settings by container.settingsRepository.settingsFlow
                 .collectAsStateWithLifecycle(initialValue = AppSettings())
 
-            CiliTheme(
-                themeMode = settings.themeMode,
-                dynamicColor = settings.dynamicColor,
-            ) {
+            val darkTheme = when (settings.themeMode) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+
+            SideEffect {
+                val barStyle = if (darkTheme) {
+                    SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+                } else {
+                    SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+                }
+                enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
+            }
+
+            CiliTheme(themeMode = settings.themeMode) {
                 CiliMainApp(container = container)
             }
         }
@@ -84,28 +97,20 @@ private fun CiliMainApp(container: AppContainer) {
     }
 
     Scaffold(
+        containerColor = InstrumentTheme.colors.bg,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    selected = currentRoute == TopRoute.SEARCH.route,
-                    onClick = { navigateTopLevel(TopRoute.SEARCH) },
-                    icon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    label = { Text(TopRoute.SEARCH.label) },
-                )
-                NavigationBarItem(
-                    selected = currentRoute == TopRoute.SITES.route,
-                    onClick = { navigateTopLevel(TopRoute.SITES) },
-                    icon = { Icon(CiliIcons.Globe, contentDescription = null) },
-                    label = { Text(TopRoute.SITES.label) },
-                )
-                NavigationBarItem(
-                    selected = currentRoute == TopRoute.SETTINGS.route,
-                    onClick = { navigateTopLevel(TopRoute.SETTINGS) },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text(TopRoute.SETTINGS.label) },
-                )
-            }
+            InstrumentDockBar(
+                items = TopRoute.entries.map { route ->
+                    DockItem(
+                        index = route.index,
+                        label = route.label,
+                        selected = currentRoute == route.route,
+                        onClick = { navigateTopLevel(route) },
+                    )
+                },
+            )
         },
     ) { innerPadding ->
         NavHost(

@@ -89,6 +89,8 @@ data class SiteRule(
     val host: String
         get() = runCatching {
             val candidate = searchUrl.ifBlank { mainUrl }
+                .replace(Regex("\\[[^\\]]*]"), "x")
+                .replace(Regex("\\{[^}]*}"), "x")
             java.net.URI(candidate).host.orEmpty()
         }.getOrDefault("")
 

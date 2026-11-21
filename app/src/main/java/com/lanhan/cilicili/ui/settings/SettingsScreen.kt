@@ -1,42 +1,47 @@
 package com.lanhan.cilicili.ui.settings
 
-import android.os.Build
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lanhan.cilicili.BuildConfig
 import com.lanhan.cilicili.domain.model.DefaultResultAction
 import com.lanhan.cilicili.domain.model.DohProvider
 import com.lanhan.cilicili.domain.model.ThemeMode
-import kotlin.math.roundToInt
+import com.lanhan.cilicili.ui.components.InstrumentHairline
+import com.lanhan.cilicili.ui.components.InstrumentSegmentedControl
+import com.lanhan.cilicili.ui.components.InstrumentSwitch
+import com.lanhan.cilicili.ui.components.InstrumentTopBar
+import com.lanhan.cilicili.ui.components.VernierRulerSlider
+import com.lanhan.cilicili.ui.theme.InstrumentTheme
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
@@ -45,6 +50,7 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
+    val c = InstrumentTheme.colors
 
     LaunchedEffect(Unit) {
         viewModel.messages.collect { msg ->
@@ -55,184 +61,373 @@ fun SettingsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .background(c.bg),
     ) {
-        Text(
-            text = "设置",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
+        InstrumentTopBar(
+            leading = {
+                Text(
+                    text = "设置",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = c.text,
+                )
+            },
         )
 
-        // Network & DoH
-        SettingsCard(title = "网络与防污染") {
-            Text("DNS-over-HTTPS (DoH)", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(6.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+        ) {
+            // 01 · DNS-over-HTTPS (2x2 Matrix)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                DohProvider.entries.forEach { provider ->
-                    FilterChip(
-                        selected = settings.dohProvider == provider,
-                        onClick = { viewModel.setDohProvider(provider) },
-                        label = { Text(provider.label) },
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "最大并发站点数: ${settings.maxConcurrency}",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Slider(
-                value = settings.maxConcurrency.toFloat(),
-                onValueChange = { viewModel.setMaxConcurrency(it.roundToInt()) },
-                valueRange = 2f..12f,
-                steps = 9,
-            )
-            Text(
-                text = "单站请求超时: ${settings.timeoutSeconds} 秒",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Slider(
-                value = settings.timeoutSeconds.toFloat(),
-                onValueChange = { viewModel.setTimeoutSeconds(it.roundToInt()) },
-                valueRange = 5f..30f,
-                steps = 24,
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "已缓存过盾凭证: ${uiState.verifiedCfHostCount} 个域名",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                OutlinedButton(
-                    onClick = viewModel::clearCfSessions,
-                    enabled = uiState.verifiedCfHostCount > 0,
-                ) {
-                    Text("清除凭证")
-                }
-            }
-        }
-
-        // Interaction
-        SettingsCard(title = "交互与操作") {
-            Text("点击搜索结果卡片时的默认动作", style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(6.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                DefaultResultAction.entries.forEach { action ->
-                    FilterChip(
-                        selected = settings.defaultAction == action,
-                        onClick = { viewModel.setDefaultAction(action) },
-                        label = { Text(action.label) },
-                    )
-                }
-            }
-        }
-
-        // Privacy
-        SettingsCard(title = "隐私与历史") {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("无痕搜索模式", style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = "开启后不再记录搜索历史关键词",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Switch(
-                    checked = settings.incognitoMode,
-                    onCheckedChange = viewModel::setIncognitoMode,
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = viewModel::clearSearchHistory,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("清空全部搜索历史")
-            }
-        }
-
-        // Theme
-        SettingsCard(title = "外观") {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                ThemeMode.entries.forEach { mode ->
-                    FilterChip(
-                        selected = settings.themeMode == mode,
-                        onClick = { viewModel.setThemeMode(mode) },
-                        label = { Text(mode.label) },
-                    )
-                }
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("Material You 动态取色", style = MaterialTheme.typography.bodyMedium)
-                    Switch(
-                        checked = settings.dynamicColor,
-                        onCheckedChange = viewModel::setDynamicColor,
+                    Text(
+                        text = "01 · DNS-over-HTTPS",
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = c.muted,
+                    )
+                    Text(
+                        text = settings.dohProvider.name,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.SemiBold,
+                        color = c.accent,
+                    )
+                }
+
+                val rows = DohProvider.entries.chunked(2)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rows.forEach { pair ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            pair.forEach { provider ->
+                                val selected = settings.dohProvider == provider
+                                val subText = provider.bootstrapIps.firstOrNull() ?: "系统解析"
+                                val title = when (provider) {
+                                    DohProvider.SYSTEM -> "系统默认"
+                                    DohProvider.ALIDNS -> "阿里 AliDNS"
+                                    DohProvider.CLOUDFLARE -> "Cloudflare"
+                                    DohProvider.QUAD9 -> "Quad9"
+                                }
+                                Surface(
+                                    onClick = { viewModel.setDohProvider(provider) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (selected) c.accent.copy(alpha = 0.10f) else c.panel,
+                                    border = BorderStroke(1.dp, if (selected) c.accent else c.hairline),
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text = title,
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = c.text,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(7.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (selected) c.accent else c.tick),
+                                            )
+                                        }
+                                        Text(
+                                            text = subText,
+                                            fontSize = 12.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            color = c.muted,
+                                            maxLines = 1,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            InstrumentHairline()
+
+            // 02 · Engine Concurrency & Timeout (Vernier Rulers)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp),
+            ) {
+                Text(
+                    text = "02 · 引擎并发",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.muted,
+                )
+
+                VernierRulerSlider(
+                    label = "最大并发站点数",
+                    valueText = settings.maxConcurrency.toString().padStart(2, '0'),
+                    value = settings.maxConcurrency,
+                    valueRange = 2..12,
+                    majorTicks = listOf(2 to "02", 7 to "07", 12 to "12"),
+                    minorIntervals = 10,
+                    onValueChange = viewModel::setMaxConcurrency,
+                )
+
+                VernierRulerSlider(
+                    label = "单站请求超时",
+                    valueText = "${settings.timeoutSeconds}s",
+                    value = settings.timeoutSeconds,
+                    valueRange = 5..30,
+                    majorTicks = listOf(
+                        5 to "5s",
+                        10 to "10s",
+                        15 to "15s",
+                        20 to "20s",
+                        25 to "25s",
+                        30 to "30s",
+                    ),
+                    minorIntervals = 10,
+                    onValueChange = viewModel::setTimeoutSeconds,
+                )
+            }
+
+            InstrumentHairline()
+
+            // 03 · Interaction & Appearance (3-Way Physical Switches)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text(
+                    text = "03 · 交互与外观",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.muted,
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "点击搜索结果默认动作",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = c.text,
+                    )
+                    InstrumentSegmentedControl(
+                        options = listOf(
+                            DefaultResultAction.ASK to "询问",
+                            DefaultResultAction.COPY to "复制",
+                            DefaultResultAction.OPEN_DOWNLOADER to "下载",
+                        ),
+                        selected = settings.defaultAction,
+                        onSelect = viewModel::setDefaultAction,
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "外观材质",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = c.text,
+                    )
+                    InstrumentSegmentedControl(
+                        options = listOf(
+                            ThemeMode.SYSTEM to "跟随",
+                            ThemeMode.DARK to "石墨",
+                            ThemeMode.LIGHT to "陶瓷",
+                        ),
+                        selected = settings.themeMode,
+                        onSelect = viewModel::setThemeMode,
                     )
                 }
             }
-        }
 
-        // About & Permission Audit
-        SettingsCard(title = "关于 CiliCili") {
-            Text(
-                text = "版本 ${BuildConfig.VERSION_NAME}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "本应用仅声明单一「android.permission.INTERNET」网络权限。无广告 SDK、无统计埋点、无应用内更新弹窗、无后台常驻服务，所有搜索历史与规则完全保存在本机。",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
+            InstrumentHairline()
 
-@Composable
-private fun SettingsCard(
-    title: String,
-    content: @Composable () -> Unit,
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            content()
+            // 04 · Cache & Privacy
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = "04 · 缓存与隐私",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.muted,
+                )
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    color = c.panel,
+                    border = BorderStroke(1.dp, c.hairline),
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        // Incognito toggle
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "无痕检索",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = c.text,
+                                )
+                                Text(
+                                    text = "不记录检索历史关键词",
+                                    fontSize = 12.sp,
+                                    color = c.muted,
+                                )
+                            }
+                            InstrumentSwitch(
+                                checked = settings.incognitoMode,
+                                onCheckedChange = viewModel::setIncognitoMode,
+                            )
+                        }
+
+                        InstrumentHairline()
+
+                        // CF Session Cache
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "过盾凭证缓存",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = c.text,
+                                )
+                                Text(
+                                    text = "${uiState.verifiedCfHostCount} 个域名",
+                                    fontSize = 12.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = c.muted,
+                                )
+                            }
+                            Surface(
+                                onClick = viewModel::clearCfSessions,
+                                enabled = uiState.verifiedCfHostCount > 0,
+                                shape = RoundedCornerShape(6.dp),
+                                color = c.chip,
+                                border = BorderStroke(1.dp, c.hairline),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .height(30.dp)
+                                        .padding(horizontal = 12.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "清除",
+                                        fontSize = 12.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = if (uiState.verifiedCfHostCount > 0) c.text else c.muted,
+                                    )
+                                }
+                            }
+                        }
+
+                        InstrumentHairline()
+
+                        // History clear
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "本地检索历史",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = c.text,
+                                )
+                                Text(
+                                    text = "${uiState.historyCount} 条记录",
+                                    fontSize = 12.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = c.muted,
+                                )
+                            }
+                            Surface(
+                                onClick = viewModel::clearSearchHistory,
+                                enabled = uiState.historyCount > 0,
+                                shape = RoundedCornerShape(6.dp),
+                                color = c.chip,
+                                border = BorderStroke(1.dp, c.hairline),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .height(30.dp)
+                                        .padding(horizontal = 12.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = "清空",
+                                        fontSize = 12.sp,
+                                        fontFamily = FontFamily.Monospace,
+                                        color = if (uiState.historyCount > 0) c.text else c.muted,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Minimal single-line version footer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 18.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "CiliCili v${BuildConfig.VERSION_NAME}",
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = c.muted,
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
