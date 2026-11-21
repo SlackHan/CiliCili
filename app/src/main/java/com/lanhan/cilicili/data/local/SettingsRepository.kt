@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.lanhan.cilicili.domain.model.DefaultResultAction
@@ -25,6 +26,11 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
     val subscriptionUrl: String = "",
+    val autoSyncSubscription: Boolean = true,
+    val subscriptionSyncIntervalHours: Int = 24,
+    val lastSubscriptionSyncAt: Long = 0L,
+    val lastSubscriptionSyncSummary: String = "",
+    val builtInPublicSourcesSeeded: Boolean = false,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -38,6 +44,10 @@ class SettingsRepository(private val context: Context) {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val SUBSCRIPTION_URL = stringPreferencesKey("subscription_url")
+        val AUTO_SYNC_SUBSCRIPTION = booleanPreferencesKey("auto_sync_subscription")
+        val LAST_SUBSCRIPTION_SYNC_AT = longPreferencesKey("last_subscription_sync_at")
+        val LAST_SUBSCRIPTION_SYNC_SUMMARY = stringPreferencesKey("last_subscription_sync_summary")
+        val BUILT_IN_PUBLIC_SOURCES_SEEDED = booleanPreferencesKey("built_in_public_sources_seeded_v1")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
@@ -56,6 +66,11 @@ class SettingsRepository(private val context: Context) {
                 ?: ThemeMode.SYSTEM,
             dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: true,
             subscriptionUrl = prefs[Keys.SUBSCRIPTION_URL].orEmpty(),
+            autoSyncSubscription = prefs[Keys.AUTO_SYNC_SUBSCRIPTION] ?: true,
+            subscriptionSyncIntervalHours = 24,
+            lastSubscriptionSyncAt = prefs[Keys.LAST_SUBSCRIPTION_SYNC_AT] ?: 0L,
+            lastSubscriptionSyncSummary = prefs[Keys.LAST_SUBSCRIPTION_SYNC_SUMMARY].orEmpty(),
+            builtInPublicSourcesSeeded = prefs[Keys.BUILT_IN_PUBLIC_SOURCES_SEEDED] ?: false,
         )
     }
 
@@ -89,5 +104,26 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setSubscriptionUrl(url: String) {
         context.dataStore.edit { it[Keys.SUBSCRIPTION_URL] = url.trim() }
+    }
+
+    suspend fun setAutoSyncSubscription(enabled: Boolean) {
+        context.dataStore.edit { it[Keys.AUTO_SYNC_SUBSCRIPTION] = enabled }
+    }
+
+    suspend fun recordSubscriptionSync(timestampMs: Long, summary: String) {
+        context.dataStore.edit {
+            it[Keys.LAST_SUBSCRIPTION_SYNC_AT] = timestampMs
+            it[Keys.LAST_SUBSCRIPTION_SYNC_SUMMARY] = summary
+        }
+    }
+
+    suspend fun recordSubscriptionSyncFailure(summary: String) {
+        context.dataStore.edit {
+            it[Keys.LAST_SUBSCRIPTION_SYNC_SUMMARY] = summary
+        }
+    }
+
+    suspend fun markBuiltInPublicSourcesSeeded() {
+        context.dataStore.edit { it[Keys.BUILT_IN_PUBLIC_SOURCES_SEEDED] = true }
     }
 }

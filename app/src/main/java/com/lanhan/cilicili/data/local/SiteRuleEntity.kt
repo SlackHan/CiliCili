@@ -144,6 +144,12 @@ interface SiteRuleDao {
     @Query("DELETE FROM site_rules WHERE id = :id")
     suspend fun deleteById(id: Long)
 
+    @Query("DELETE FROM site_rules WHERE sourceType NOT IN ('PROWLARR', 'TORZNAB')")
+    suspend fun deleteNonApiRules()
+
+    @Query("SELECT id FROM site_rules WHERE sourceType IN ('PROWLARR', 'TORZNAB')")
+    suspend fun getSelfHostedApiIds(): List<Long>
+
     @Query("DELETE FROM site_rules")
     suspend fun deleteAll()
 }

@@ -52,6 +52,9 @@ data class SitesUiState(
     val isCheckingHealth: Boolean = false,
     val healthProgress: HealthCheckProgress? = null,
     val subscriptionUrl: String = "",
+    val autoSyncSubscription: Boolean = true,
+    val lastSubscriptionSyncAt: Long = 0L,
+    val lastSubscriptionSyncSummary: String = "",
     val inspectState: SiteInspectState? = null,
     val cfVerifySite: Pair<SiteRule, String>? = null,
 )
@@ -125,6 +128,9 @@ class SitesViewModel(private val container: AppContainer) : ViewModel() {
             isCheckingHealth = isChecking,
             healthProgress = progress,
             subscriptionUrl = settings.subscriptionUrl,
+            autoSyncSubscription = settings.autoSyncSubscription,
+            lastSubscriptionSyncAt = settings.lastSubscriptionSyncAt,
+            lastSubscriptionSyncSummary = settings.lastSubscriptionSyncSummary,
             inspectState = inspect,
             cfVerifySite = cfVerify,
         )
@@ -193,15 +199,25 @@ class SitesViewModel(private val container: AppContainer) : ViewModel() {
 
     fun resetDefaults() {
         viewModelScope.launch {
-            container.siteRuleRepository.resetToDefaults()
-            _effects.send(SitesEffect.Message("已重置为内置 39 条规则"))
+            val count = container.siteRuleRepository.resetToDefaults(preserveApiSources = true)
+            _effects.send(SitesEffect.Message("已重置为内置 $count 条规则（已保留自建 API 节点）"))
+        }
+    }
+
+    fun setAutoSyncSubscription(enabled: Boolean) {
+        viewModelScope.launch {
+            container.settingsRepository.setAutoSyncSubscription(enabled)
         }
     }
 
     fun importJson(rawJson: String, replaceAll: Boolean) {
         viewModelScope.launch {
             runCatching {
-                container.siteRuleRepository.importFromJson(rawJson, replaceAll)
+                container.siteRuleRepository.importFromJson(
+                    rawJson = rawJson,
+                    replaceAll = replaceAll,
+                    preserveApiSources = true,
+                )
             }.onSuccess { count ->
                 _effects.send(SitesEffect.Message("成功导入 $count 条站点规则"))
             }.onFailure { err ->
@@ -218,13 +234,27 @@ class SitesViewModel(private val container: AppContainer) : ViewModel() {
             val fetched = container.searchOrchestrator.fetchRemoteText(cleanUrl)
             fetched.onSuccess { text ->
                 runCatching {
-                    container.siteRuleRepository.importFromJson(text, replaceAll)
+                    container.siteRuleRepository.importFromJson(
+                        rawJson = text,
+                        replaceAll = replaceAll,
+                        preserveApiSources = true,
+                    )
                 }.onSuccess { count ->
+                    container.settingsRepository.recordSubscriptionSync(
+                        timestampMs = System.currentTimeMillis(),
+                        summary = "手动同步 $count 条规则",
+                    )
                     _effects.send(SitesEffect.Message("订阅更新成功，共导入 $count 条规则"))
                 }.onFailure { err ->
+                    container.settingsRepository.recordSubscriptionSyncFailure(
+                        "手动同步解析失败: ${err.message ?: "格式错误"}",
+                    )
                     _effects.send(SitesEffect.Message("订阅 JSON 格式有误: ${err.message}"))
                 }
             }.onFailure { err ->
+                container.settingsRepository.recordSubscriptionSyncFailure(
+                    "手动同步拉取失败: ${err.message ?: "网络异常"}",
+                )
                 _effects.send(SitesEffect.Message("拉取订阅失败: ${err.message}"))
             }
         }
@@ -406,7 +436,9 @@ class SitesViewModel(private val container: AppContainer) : ViewModel() {
                         val keyParam = if (cleanKey.isNotBlank()) "&apikey=$cleanKey" else ""
                         "$endpoint?t=search&q=[keyword]&limit=50&offset=[offset]$keyParam"
                     }
-                    SiteSourceType.HTML -> rawUrl
+                    SiteSourceType.HTML,
+                    SiteSourceType.JSON_API,
+                    SiteSourceType.RSS -> rawUrl
                 }
             }
 
@@ -419,6 +451,8 @@ class SitesViewModel(private val container: AppContainer) : ViewModel() {
                 when (sourceType) {
                     SiteSourceType.PROWLARR -> "Prowlarr 聚合"
                     SiteSourceType.TORZNAB -> "Torznab 聚合"
+                    SiteSourceType.JSON_API -> "JSON 公开源"
+                    SiteSourceType.RSS -> "RSS 订阅源"
                     SiteSourceType.HTML -> "自定义站点"
                 }
             }

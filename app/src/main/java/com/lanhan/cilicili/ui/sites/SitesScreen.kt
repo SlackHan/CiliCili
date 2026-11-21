@@ -576,7 +576,7 @@ fun SitesScreen(
                         modifier = Modifier.clickable { replaceAll = !replaceAll },
                     ) {
                         Checkbox(checked = replaceAll, onCheckedChange = { replaceAll = it })
-                        Text("覆盖现有全部规则（不勾选则按 ID 合并）", style = MaterialTheme.typography.bodySmall)
+                        Text("覆盖现有公开规则（自动保留 Prowlarr / Torznab 节点）", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             },
@@ -609,7 +609,7 @@ fun SitesScreen(
                     OutlinedTextField(
                         value = url,
                         onValueChange = { url = it },
-                        label = { Text("JSON Raw URL (如 GitHub Gist)") },
+                        label = { Text("JSON Raw URL (如 GitHub sites_live.json)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -619,7 +619,33 @@ fun SitesScreen(
                         modifier = Modifier.clickable { replaceAll = !replaceAll },
                     ) {
                         Checkbox(checked = replaceAll, onCheckedChange = { replaceAll = it })
-                        Text("覆盖现有全部规则", style = MaterialTheme.typography.bodySmall)
+                        Text("覆盖公开规则（自动保留 Prowlarr / Torznab 节点）", style = MaterialTheme.typography.bodySmall)
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            viewModel.setAutoSyncSubscription(!state.autoSyncSubscription)
+                        },
+                    ) {
+                        Checkbox(
+                            checked = state.autoSyncSubscription,
+                            onCheckedChange = viewModel::setAutoSyncSubscription,
+                        )
+                        Text("启动时自动同步（每 24 小时）", style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (state.lastSubscriptionSyncSummary.isNotBlank()) {
+                        val timePrefix = if (state.lastSubscriptionSyncAt > 0L) {
+                            val fmt = java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.getDefault())
+                            "${fmt.format(java.util.Date(state.lastSubscriptionSyncAt))} · "
+                        } else {
+                            ""
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "上次状态：$timePrefix${state.lastSubscriptionSyncSummary}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = c.muted,
+                        )
                     }
                 }
             },
@@ -937,33 +963,63 @@ private fun SiteInspectSheet(
                 label = { Text("searchUrl") },
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (site.sourceType != SiteSourceType.HTML) {
-                OutlinedTextField(
-                    value = apiKey,
-                    onValueChange = { apiKey = it },
-                    label = { Text("X-Api-Key") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            } else {
-                OutlinedTextField(
-                    value = groupExpr,
-                    onValueChange = { groupExpr = it },
-                    label = { Text("group XPath") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = titleExpr,
-                    onValueChange = { titleExpr = it },
-                    label = { Text("title XPath") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = magnetExpr,
-                    onValueChange = { magnetExpr = it },
-                    label = { Text("magnet XPath") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+            when (site.sourceType) {
+                SiteSourceType.PROWLARR, SiteSourceType.TORZNAB -> {
+                    OutlinedTextField(
+                        value = apiKey,
+                        onValueChange = { apiKey = it },
+                        label = { Text("X-Api-Key") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                SiteSourceType.RSS -> {
+                    Text(
+                        text = "RSS / Atom 订阅源自动解析标题、大小、做种数与磁力链，仅需配置 searchUrl。",
+                        fontSize = 12.sp,
+                        color = c.muted,
+                    )
+                }
+                SiteSourceType.JSON_API -> {
+                    OutlinedTextField(
+                        value = groupExpr,
+                        onValueChange = { groupExpr = it },
+                        label = { Text("group JSON 路径（留空为根数组）") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = titleExpr,
+                        onValueChange = { titleExpr = it },
+                        label = { Text("title 字段路径（如 name）") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = magnetExpr,
+                        onValueChange = { magnetExpr = it },
+                        label = { Text("magnet / hash 字段（如 magnet_uri|info_hash）") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                SiteSourceType.HTML -> {
+                    OutlinedTextField(
+                        value = groupExpr,
+                        onValueChange = { groupExpr = it },
+                        label = { Text("group (XPath 或 css:)") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = titleExpr,
+                        onValueChange = { titleExpr = it },
+                        label = { Text("title (XPath 或 css:)") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = magnetExpr,
+                        onValueChange = { magnetExpr = it },
+                        label = { Text("magnet (XPath 或 css:)") },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
 
             Button(

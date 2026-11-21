@@ -992,5 +992,83 @@
       "url": "./td[2]/a[starts-with(@href, '/view.php?id=')]/@href",
       "magnet": "//a[starts-with(@href, 'magnet:')]/@href"
     }
+  },
+  {
+    "id": 10101,
+    "name": "海盗湾 API",
+    "info": "ThePirateBay 官方公开 JSON 接口，无需翻页、免 HTML 解析",
+    "state": true,
+    "time": "2026-11-21 00:00:00",
+    "updateTime": "2026-11-21 00:00:00",
+    "sourceType": "JSON_API",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://apibay.org",
+      "searchUrl": "https://apibay.org/q.php?q=[keyword]",
+      "header": {}
+    },
+    "expressionModel": {
+      "group": "",
+      "title": "name",
+      "date": "added",
+      "size": "size",
+      "url": "",
+      "magnet": "info_hash"
+    }
+  },
+  {
+    "id": 10102,
+    "name": "Nyaa 动漫 RSS",
+    "info": "Nyaa.si 官方 RSS 订阅源，结构稳定",
+    "state": true,
+    "time": "2026-11-21 00:00:00",
+    "updateTime": "2026-11-21 00:00:00",
+    "sourceType": "RSS",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://nyaa.si",
+      "searchUrl": "https://nyaa.si/?page=rss&q=[keyword]",
+      "header": {}
+    },
+    "expressionModel": {}
+  },
+  {
+    "id": 10103,
+    "name": "动漫花园 RSS",
+    "info": "動漫花園官方 RSS 订阅源，自带磁力与文件大小",
+    "state": true,
+    "time": "2026-11-21 00:00:00",
+    "updateTime": "2026-11-21 00:00:00",
+    "sourceType": "RSS",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://dmhy.anoneko.com",
+      "searchUrl": "https://dmhy.anoneko.com/topics/rss/rss.xml?keyword=[keyword]",
+      "header": {}
+    },
+    "expressionModel": {}
+  },
+  {
+    "id": 10104,
+    "name": "AnimeTosho API",
+    "info": "AnimeTosho 官方 JSON 接口，动漫与字幕组资源聚合",
+    "state": true,
+    "time": "2026-11-21 00:00:00",
+    "updateTime": "2026-11-21 00:00:00",
+    "sourceType": "JSON_API",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://feed.animetosho.org",
+      "searchUrl": "https://feed.animetosho.org/json?q=[keyword]",
+      "header": {}
+    },
+    "expressionModel": {
+      "group": "",
+      "title": "title",
+      "date": "timestamp",
+      "size": "total_size",
+      "url": "link",
+      "magnet": "magnet_uri|info_hash"
+    }
   }
 ]

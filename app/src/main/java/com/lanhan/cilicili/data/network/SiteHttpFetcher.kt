@@ -89,8 +89,8 @@ class SiteHttpFetcher(
         }
         if (!hasAccept) {
             val defaultAccept = when (rule.sourceType) {
-                SiteSourceType.PROWLARR -> "application/json, */*;q=0.8"
-                SiteSourceType.TORZNAB -> "application/xml, application/rss+xml, text/xml;q=0.9, */*;q=0.8"
+                SiteSourceType.PROWLARR, SiteSourceType.JSON_API -> "application/json, */*;q=0.8"
+                SiteSourceType.TORZNAB, SiteSourceType.RSS -> "application/xml, application/rss+xml, text/xml;q=0.9, */*;q=0.8"
                 SiteSourceType.HTML -> "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
             }
             requestBuilder.header("Accept", defaultAccept)
@@ -99,7 +99,7 @@ class SiteHttpFetcher(
 
         try {
             val baseClient = clientProvider()
-            val effectiveClient = if (rule.sourceType != SiteSourceType.HTML) {
+            val effectiveClient = if (rule.sourceType.isSelfHostedApi) {
                 val minApiReadMs = 45_000L
                 if (baseClient.readTimeoutMillis < minApiReadMs) {
                     baseClient.newBuilder()
@@ -131,7 +131,7 @@ class SiteHttpFetcher(
                 }
                 if (!response.isSuccessful) {
                     val detail = when (response.code) {
-                        401, 403 -> if (rule.sourceType != SiteSourceType.HTML) "鉴权失败 (HTTP ${response.code})" else "HTTP ${response.code}"
+                        401, 403 -> if (rule.sourceType.isSelfHostedApi) "鉴权失败 (HTTP ${response.code})" else "HTTP ${response.code}"
                         else -> "HTTP ${response.code}"
                     }
                     return@withContext FetchResult.HttpFailure(

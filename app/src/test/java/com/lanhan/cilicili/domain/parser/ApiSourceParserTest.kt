@@ -1,5 +1,6 @@
 package com.lanhan.cilicili.domain.parser
 
+import com.lanhan.cilicili.domain.model.ExpressionModelDto
 import com.lanhan.cilicili.domain.model.SiteRequestDto
 import com.lanhan.cilicili.domain.model.SiteRule
 import com.lanhan.cilicili.domain.model.SiteRuleDto
@@ -159,5 +160,197 @@ class ApiSourceParserTest {
         val builtUrl = RuleExtractor.buildSearchUrl(prowlarr, "ubuntu iso", page = 2)
         assertTrue(builtUrl.contains("query=ubuntu%20iso"))
         assertTrue(builtUrl.contains("offset=50"))
+    }
+
+    @Test
+    fun `parses generic json api root array and filters apibay empty sentinel`() {
+        val rule = SiteRule.fromDto(
+            SiteRuleDto(
+                id = 10101,
+                name = "海盗湾 API",
+                sourceType = "JSON_API",
+                request = SiteRequestDto(
+                    mainUrl = "https://apibay.org",
+                    searchUrl = "https://apibay.org/q.php?q=[keyword]",
+                ),
+                expressionModel = ExpressionModelDto(
+                    group = "",
+                    title = "name",
+                    date = "added",
+                    size = "size",
+                    url = "",
+                    magnet = "info_hash",
+                ),
+            ),
+            sortOrder = 0,
+        )
+
+        val emptyJson = """
+            [
+              {
+                "id": "0",
+                "name": "No results returned",
+                "info_hash": "0000000000000000000000000000000000000000",
+                "size": "0",
+                "added": "0",
+                "seeders": "0"
+              }
+            ]
+        """.trimIndent()
+        assertTrue(RuleExtractor.parseSearchResponse(rule, emptyJson, rule.searchUrl).isEmpty())
+
+        val validJson = """
+            [
+              {
+                "id": "123",
+                "name": "Ubuntu 24.04.1 LTS",
+                "info_hash": "4444444444444444444444444444444444444444",
+                "size": "4294967296",
+                "added": "1700000000",
+                "seeders": "210"
+              }
+            ]
+        """.trimIndent()
+        val items = RuleExtractor.parseSearchResponse(rule, validJson, rule.searchUrl)
+        assertEquals(1, items.size)
+        val item = items.first()
+        assertEquals("Ubuntu 24.04.1 LTS", item.title)
+        assertEquals(4294967296L, item.sizeBytes)
+        assertEquals("4.00 GB", item.sizeText)
+        assertEquals("2023-11-14", item.dateText)
+        assertEquals(210, item.seeders)
+        assertEquals("4444444444444444444444444444444444444444", item.infoHash)
+        assertTrue(item.magnetUri!!.startsWith("magnet:?xt=urn:btih:4444444444444444444444444444444444444444"))
+    }
+
+    @Test
+    fun `parses nested json dot-path with fallback expression`() {
+        val rule = SiteRule.fromDto(
+            SiteRuleDto(
+                id = 10104,
+                name = "NestedApi",
+                sourceType = "JSON_API",
+                request = SiteRequestDto(
+                    mainUrl = "https://feed.example.org",
+                    searchUrl = "https://feed.example.org/json?q=[keyword]",
+                ),
+                expressionModel = ExpressionModelDto(
+                    group = "data.movies",
+                    title = "title",
+                    date = "timestamp",
+                    size = "total_size",
+                    url = "link",
+                    magnet = "magnet_uri|info_hash",
+                ),
+            ),
+            sortOrder = 0,
+        )
+
+        val jsonBody = """
+            {
+              "data": {
+                "movies": [
+                  {
+                    "title": "Movie One",
+                    "timestamp": 1700000000,
+                    "total_size": 1073741824,
+                    "link": "/view/1",
+                    "magnet_uri": null,
+                    "info_hash": "5555555555555555555555555555555555555555"
+                  }
+                ]
+              }
+            }
+        """.trimIndent()
+
+        val items = RuleExtractor.parseSearchResponse(rule, jsonBody, rule.searchUrl)
+        assertEquals(1, items.size)
+        val item = items.first()
+        assertEquals("Movie One", item.title)
+        assertEquals("1.00 GB", item.sizeText)
+        assertEquals("2023-11-14", item.dateText)
+        assertEquals("https://feed.example.org/view/1", item.detailUrl)
+        assertEquals("5555555555555555555555555555555555555555", item.infoHash)
+    }
+
+    @Test
+    fun `parses rss feeds for nyaa, dmhy enclosure, and atom entries`() {
+        val nyaaRule = SiteRule.fromDto(
+            SiteRuleDto(
+                id = 10102,
+                name = "Nyaa",
+                sourceType = "RSS",
+                request = SiteRequestDto(
+                    mainUrl = "https://nyaa.si",
+                    searchUrl = "https://nyaa.si/?page=rss&q=[keyword]",
+                ),
+            ),
+            sortOrder = 0,
+        )
+
+        val nyaaXml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0" xmlns:nyaa="https://nyaa.si/xmlns/nyaa">
+              <channel>
+                <item>
+                  <title>[SubsPlease] Frieren - 01 (1080p)</title>
+                  <link>https://nyaa.si/view/1700000</link>
+                  <pubDate>Fri, 29 Sep 2023 15:10:00 -0000</pubDate>
+                  <nyaa:seeders>512</nyaa:seeders>
+                  <nyaa:infoHash>6666666666666666666666666666666666666666</nyaa:infoHash>
+                  <nyaa:size>1.4 GiB</nyaa:size>
+                </item>
+              </channel>
+            </rss>
+        """.trimIndent()
+
+        val nyaaItems = RuleExtractor.parseSearchResponse(nyaaRule, nyaaXml, nyaaRule.searchUrl)
+        assertEquals(1, nyaaItems.size)
+        val nItem = nyaaItems.first()
+        assertEquals("[SubsPlease] Frieren - 01 (1080p)", nItem.title)
+        assertEquals(512, nItem.seeders)
+        assertEquals("2023-09-29", nItem.dateText)
+        assertTrue(nItem.sizeBytes > 1_000_000_000L)
+        assertEquals("6666666666666666666666666666666666666666", nItem.infoHash)
+        assertEquals("https://nyaa.si/view/1700000", nItem.detailUrl)
+
+        val dmhyXml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <rss version="2.0">
+              <channel>
+                <item>
+                  <title>DMHY Release</title>
+                  <link>https://dmhy.anoneko.com/topics/view/123.html</link>
+                  <pubDate>Tue, 20 Oct 2026 12:34:56 +0000</pubDate>
+                  <enclosure url="magnet:?xt=urn:btih:7777777777777777777777777777777777777777&amp;dn=DMHY" length="0" type="application/x-bittorrent" />
+                </item>
+              </channel>
+            </rss>
+        """.trimIndent()
+
+        val dmhyItems = RuleExtractor.parseSearchResponse(nyaaRule, dmhyXml, nyaaRule.searchUrl)
+        assertEquals(1, dmhyItems.size)
+        assertEquals("7777777777777777777777777777777777777777", dmhyItems.first().infoHash)
+        assertEquals("https://dmhy.anoneko.com/topics/view/123.html", dmhyItems.first().detailUrl)
+
+        val atomXml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <feed xmlns="http://www.w3.org/2005/Atom">
+              <entry>
+                <title>Atom Release</title>
+                <id>urn:btih:8888888888888888888888888888888888888888</id>
+                <link rel="alternate" href="https://example.org/entry/1" />
+                <updated>2026-11-10T08:00:00Z</updated>
+                <summary>magnet:?xt=urn:btih:8888888888888888888888888888888888888888</summary>
+              </entry>
+            </feed>
+        """.trimIndent()
+
+        val atomItems = RuleExtractor.parseSearchResponse(nyaaRule, atomXml, nyaaRule.searchUrl)
+        assertEquals(1, atomItems.size)
+        assertEquals("Atom Release", atomItems.first().title)
+        assertEquals("2026-11-10", atomItems.first().dateText)
+        assertEquals("8888888888888888888888888888888888888888", atomItems.first().infoHash)
+        assertEquals("https://example.org/entry/1", atomItems.first().detailUrl)
     }
 }

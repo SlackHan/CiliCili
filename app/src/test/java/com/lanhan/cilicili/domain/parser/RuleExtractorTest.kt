@@ -1,9 +1,11 @@
 package com.lanhan.cilicili.domain.parser
 
+import com.lanhan.cilicili.data.local.SiteRuleRepository
 import com.lanhan.cilicili.domain.model.ExpressionModelDto
 import com.lanhan.cilicili.domain.model.SiteRequestDto
 import com.lanhan.cilicili.domain.model.SiteRule
 import com.lanhan.cilicili.domain.model.SiteRuleDto
+import com.lanhan.cilicili.domain.model.SiteSourceType
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -106,7 +108,104 @@ class RuleExtractorTest {
     }
 
     @Test
-    fun `bundled sites_default json parses cleanly into 39 rules`() {
+    fun `parses css selector search results and detail magnet`() {
+        val rule = SiteRule.fromDto(
+            SiteRuleDto(
+                id = 10201,
+                name = "CssTracker",
+                request = SiteRequestDto(
+                    mainUrl = "https://css.example.org",
+                    searchUrl = "https://css.example.org/search?q=[keyword]&p=[page]",
+                ),
+                expressionModel = ExpressionModelDto(
+                    group = "css:table.list tbody tr",
+                    title = "css:td.name a",
+                    date = "css:td.date",
+                    size = "css:td.size",
+                    url = "",
+                    magnet = "css:td.name a@href",
+                ),
+            ),
+            sortOrder = 0,
+        )
+
+        val searchHtml = """
+            <html><body>
+              <table class="list">
+                <tbody>
+                  <tr>
+                    <td class="name"><a href="/hash/9999999999999999999999999999999999999999.html">Fedora 41 Server</a></td>
+                    <td class="date">2026-11-15</td>
+                    <td class="size">2.5 GB</td>
+                  </tr>
+                </tbody>
+              </table>
+            </body></html>
+        """.trimIndent()
+
+        val items = RuleExtractor.parseSearchPage(rule, searchHtml, "https://css.example.org/search?q=fedora&p=1")
+        assertEquals(1, items.size)
+        val item = items.first()
+        assertEquals("Fedora 41 Server", item.title)
+        assertEquals("2026-11-15", item.dateText)
+        assertEquals("2.5 GB", item.sizeText)
+        assertEquals("9999999999999999999999999999999999999999", item.infoHash)
+        assertTrue(item.magnetUri!!.startsWith("magnet:?xt=urn:btih:9999999999999999999999999999999999999999"))
+
+        val detailRule = rule.copy(
+            urlExpr = "css:td.name a@href",
+            magnetExpr = "css:input#magnet@value",
+        )
+        val detailHtml = """
+            <html><body>
+              <input id="magnet" value="magnet:?xt=urn:btih:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&amp;dn=Fedora" />
+            </body></html>
+        """.trimIndent()
+        val detailMagnet = RuleExtractor.parseDetailMagnet(
+            detailRule,
+            detailHtml,
+            "https://css.example.org/view/1",
+            "Fedora 41 Server",
+        )
+        assertNotNull(detailMagnet)
+        assertTrue(detailMagnet!!.contains("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
+    }
+
+    @Test
+    fun `filterDtosForSafeImport protects self-hosted prowlarr and torznab ids`() {
+        val incoming = listOf(
+            SiteRuleDto(
+                id = 10001,
+                name = "Public HTML",
+                sourceType = "HTML",
+                request = SiteRequestDto(searchUrl = "https://html.example.org/[keyword]"),
+            ),
+            SiteRuleDto(
+                id = 20001,
+                name = "Conflicting HTML",
+                sourceType = "HTML",
+                request = SiteRequestDto(searchUrl = "https://conflict.example.org/[keyword]"),
+            ),
+            SiteRuleDto(
+                id = 20002,
+                name = "Imported Torznab",
+                sourceType = "TORZNAB",
+                request = SiteRequestDto(searchUrl = "https://tz.example.org/api?q=[keyword]"),
+            ),
+        )
+
+        val protectedIds = setOf(20001L, 20002L)
+        val filtered = SiteRuleRepository.filterDtosForSafeImport(
+            incoming = incoming,
+            protectedApiIds = protectedIds,
+            preserveApiSources = true,
+        )
+        assertEquals(2, filtered.size)
+        assertEquals(listOf(10001L, 20002L), filtered.map { it.id })
+    }
+
+    @Test
+    fun `bundled sites_default json parses cleanly into 43 rules including json api and rss`() {
         val candidates = listOf(
             File("src/main/assets/sites_default.json"),
             File("app/src/main/assets/sites_default.json"),
@@ -114,6 +213,8 @@ class RuleExtractorTest {
         val jsonFile = candidates.firstOrNull { it.exists() }
         assertNotNull("sites_default.json should exist", jsonFile)
         val dtos = json.decodeFromString<List<SiteRuleDto>>(jsonFile!!.readText())
-        assertEquals(39, dtos.size)
+        assertEquals(43, dtos.size)
+        assertTrue(dtos.any { SiteSourceType.fromRaw(it.sourceType) == SiteSourceType.JSON_API })
+        assertTrue(dtos.any { SiteSourceType.fromRaw(it.sourceType) == SiteSourceType.RSS })
     }
 }

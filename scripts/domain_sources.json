@@ -1,0 +1,10 @@
+{
+  "_comment": "配置需要自动从发布页抓取最新域名的站点。将对应规则的 id 与发布页 URL、域名正则填入 entries 数组即可。",
+  "_example": {
+    "id": 10001,
+    "name": "SOBT",
+    "publishUrl": "https://example-publish.org/",
+    "domainRegex": "https?://sobt[0-9]+\\.top"
+  },
+  "entries": []
+}

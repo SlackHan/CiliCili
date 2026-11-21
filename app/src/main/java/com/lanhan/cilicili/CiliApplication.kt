@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -43,6 +44,38 @@ class AppContainer(application: Application) {
     init {
         appScope.launch {
             siteRuleRepository.ensureSeeded()
+            val settings = settingsRepository.settingsFlow.first()
+            if (!settings.builtInPublicSourcesSeeded) {
+                siteRuleRepository.seedMissingPublicSources()
+                settingsRepository.markBuiltInPublicSourcesSeeded()
+            }
+            if (settings.autoSyncSubscription && settings.subscriptionUrl.isNotBlank()) {
+                val intervalMs = settings.subscriptionSyncIntervalHours.coerceAtLeast(1) * 3_600_000L
+                if (System.currentTimeMillis() - settings.lastSubscriptionSyncAt >= intervalMs) {
+                    searchOrchestrator.fetchRemoteText(settings.subscriptionUrl).onSuccess { text ->
+                        runCatching {
+                            siteRuleRepository.importFromJson(
+                                rawJson = text,
+                                replaceAll = false,
+                                preserveApiSources = true,
+                            )
+                        }.onSuccess { count ->
+                            settingsRepository.recordSubscriptionSync(
+                                timestampMs = System.currentTimeMillis(),
+                                summary = "自动同步 $count 条规则",
+                            )
+                        }.onFailure { err ->
+                            settingsRepository.recordSubscriptionSyncFailure(
+                                "自动同步解析失败: ${err.message ?: "格式错误"}",
+                            )
+                        }
+                    }.onFailure { err ->
+                        settingsRepository.recordSubscriptionSyncFailure(
+                            "自动同步拉取失败: ${err.message ?: "网络异常"}",
+                        )
+                    }
+                }
+            }
         }
         appScope.launch {
             settingsRepository.settingsFlow

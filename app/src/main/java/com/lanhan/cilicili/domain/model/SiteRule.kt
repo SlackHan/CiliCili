@@ -5,9 +5,14 @@ import kotlinx.serialization.Serializable
 
 enum class SiteSourceType(val label: String) {
     HTML("网页 XPath"),
+    JSON_API("JSON 接口"),
+    RSS("RSS 订阅"),
     PROWLARR("Prowlarr API"),
     TORZNAB("Torznab XML"),
     ;
+
+    val isSelfHostedApi: Boolean
+        get() = this == PROWLARR || this == TORZNAB
 
     companion object {
         fun fromRaw(raw: String?): SiteSourceType =
