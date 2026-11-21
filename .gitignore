@@ -1,0 +1,25 @@
+# Gradle & Kotlin build caches/outputs
+.gradle/
+.kotlin/
+build/
+app/build/
+captures/
+
+# Local SDK / machine-specific config
+local.properties
+
+# Android Studio / IntelliJ / VS Code
+.idea/
+*.iml
+.vscode/
+
+# Packaged binaries & signing keys
+*.apk
+*.ap_
+*.aab
+*.jks
+*.keystore
+
+# OS junk
+.DS_Store
+Thumbs.db

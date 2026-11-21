@@ -1,0 +1,996 @@
+[
+  {
+    "id": 10001,
+    "name": "SOBT",
+    "info": "最好的BT搜索,种子搜索网站",
+    "state": true,
+    "time": "2022-01-15 10:43:00",
+    "updateTime": "2026-10-21 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://sobt22.top",
+      "searchUrl": "https://sobt22.top/[keyword].html?sort=rel&page=[page]",
+      "header": {
+        "Host": "sobt22.top",
+        "Referer": "https://sobt22.top/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='search-item']",
+      "title": ".//div[@class='item-title']//h3/a",
+      "date": ".//div[@class='item-bar']//span[2]",
+      "size": ".//div[@class='item-bar']//span[3]",
+      "url": ".//div[@class='item-title']//h3/a/@href",
+      "magnet": "//input[@id='m_link']/@value"
+    }
+  },
+  {
+    "id": 10002,
+    "name": "磁力引擎搜索",
+    "info": "全球资源最丰富的磁力链BT种子搜索下载网站和垂直搜索引擎!",
+    "state": true,
+    "time": "2022-01-15 22:43:00",
+    "updateTime": "2026-10-20 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "http://eclso.fun",
+      "searchUrl": "http://eclso.fun/soso/[keyword]_rel_[page].html",
+      "header": {
+        "Host": "eclso.fun",
+        "Referer": "http://eclso.fun/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='search-item']",
+      "title": ".//div[@class='item-title']//h3/a",
+      "date": ".//div[@class='item-bar']/span[2]/b",
+      "size": ".//div[@class='item-bar']/span[3]/b",
+      "url": ".//div[@class='item-title']//h3/a/@href",
+      "magnet": "//input[@id='m_link']/@value"
+    }
+  },
+  {
+    "id": 10003,
+    "name": "磁力宝",
+    "info": "最佳的资源搜索引擎",
+    "state": true,
+    "time": "2022-01-16 18:13:00",
+    "updateTime": "2026-10-21 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://163.192.12.82:12580",
+      "searchUrl": "https://163.192.12.82:12580/[keyword]?sort=rel&page=[page]",
+      "header": {
+        "Origin": "https://163.192.12.82:12580",
+        "Referer": "https://163.192.12.82:12580",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='search-item']",
+      "title": ".//div[@class='item-title']//h3/a",
+      "date": ".//div[@class='item-bar']/span[2]/b",
+      "size": ".//div[@class='item-bar']/span[3]/b",
+      "url": ".//div[@class='item-title']//h3/a/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
+    "id": 10004,
+    "name": "磁力猫",
+    "info": "一站式全网磁力多引擎磁力种子搜索功能",
+    "state": true,
+    "time": "2022-01-16 21:03:00",
+    "updateTime": "2026-10-21 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://clm16.vip/",
+      "searchUrl": "https://clm16.vip/[keyword]&sort=rele&p=[page]",
+      "header": {
+        "Host": "clm16.vip",
+        "Referer": "https://clm16.vip/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//ul[@id='Search_list_wrapper']/li",
+      "title": ".//a[@class='SearchListTitle_result_title']",
+      "date": ".//div[@class='Search_list_info']/em[2]/following-sibling::text()[1]",
+      "size": ".//div[@class='Search_list_info']/em[1]/following-sibling::text()[1]",
+      "url": ".//a[@class='SearchListTitle_result_title']/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
+    "id": 10005,
+    "name": "磁力狗",
+    "info": "懂你的搜索",
+    "state": true,
+    "time": "2022-01-16 21:56:00",
+    "updateTime": "2023-05-12 14:44:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://clg63.top/",
+      "searchUrl": "https://clg63.top/[keyword]&sort=rele&p=[page]",
+      "header": {
+        "Referer": "https://clg63.top/search?word=%E7%BE%8E%E5%A5%B3",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//ul[@id='Search_list_wrapper']/li",
+      "title": ".//a[@class='SearchListTitle_result_title']",
+      "date": ".//div[@class='Search_list_info']",
+      "size": "",
+      "url": ".//a[@class='SearchListTitle_result_title']/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
+    "id": 10006,
+    "name": "btfox",
+    "info": "最全的bt种子搜索",
+    "state": true,
+    "time": "2022-01-16 22:03:00",
+    "updateTime": "2023-05-12 15:21:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://btfox20.top/",
+      "searchUrl": "https://btfox20.top/[keyword]&sort=time&page=[page]",
+      "header": {
+        "Referer": "https://btfox20.top",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='item']",
+      "title": ".//div[@class='thread_check']/div/a",
+      "date": ".//div[@class='threadlist_note']",
+      "size": "",
+      "url": ".//div[@class='thread_check']/div/a/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
+    "id": 10007,
+    "name": "ØMagnet",
+    "info": "Made Torrent Sharing  Easy",
+    "state": true,
+    "time": "2022-01-16 22:19:00",
+    "updateTime": "2026-10-21 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://wuji.me/",
+      "searchUrl": "https://wuji.me/search?q=[keyword]&page=[page]",
+      "header": {
+        "Referer": "https://wuji.me/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[contains(concat(' ', normalize-space(@class), ' '), ' file-list ')]/tbody/tr[td/a[@href]]",
+      "title": "./td[1]/a",
+      "date": "",
+      "size": "./td[contains(concat(' ', normalize-space(@class), ' '), ' td-size ')]",
+      "url": "./td[1]/a/@href",
+      "magnet": "//input[@id='input-magnet']/@value"
+    }
+  },
+  {
+    "id": 10008,
+    "name": "种子吧",
+    "info": "专业的种子搜索引擎",
+    "state": true,
+    "time": "2022-08-27 16:27:00",
+    "updateTime": "2023-05-12 15:21:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://zzb07.top/",
+      "searchUrl": "https://zzb07.top/[keyword]&sort=rel&page=[page]",
+      "header": {
+        "Referer": "zzb07.top",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='search-list']/ul/li",
+      "title": ".//h4/a/@title",
+      "date": ".//div[@class='search-info']/span[1]",
+      "size": ".//div[@class='search-info']/span[2]",
+      "url": ".//h4/a/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
+    "id": 10009,
+    "name": "1024BT",
+    "info": "种子搜索神器,为您提供高效精准的磁力链接搜索服务!",
+    "state": true,
+    "time": "2025-01-17 10:33:00",
+    "updateTime": "2026-10-21 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://k5ur3bft.1024209.xyz",
+      "searchUrl": "https://k5ur3bft.1024209.xyz/search-[keyword]-0-0-[page].html?lang=zh_CN",
+      "header": {
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//article[contains(concat(' ', normalize-space(@class), ' '), ' resource-card ')]",
+      "title": "./h2/a",
+      "date": "./div[contains(concat(' ', normalize-space(@class), ' '), ' resource-meta ')]/span[1]",
+      "size": "./div[contains(concat(' ', normalize-space(@class), ' '), ' resource-meta ')]/span[2]",
+      "url": "",
+      "magnet": "./h2/a[starts-with(@href, '/hash/')]/@href"
+    }
+  },
+  {
+    "id": 10010,
+    "name": "吃力网",
+    "info": "分享提供最全的搜索引擎",
+    "state": true,
+    "time": "2022-01-17 11:26:00",
+    "updateTime": "2026-10-21 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://henna.jiukankan.mom",
+      "searchUrl": "https://henna.jiukankan.mom/search/[keyword]/page-[page].html",
+      "header": {
+        "Referer": "https://henna.jiukankan.mom/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@id='w0']/article[contains(concat(' ', normalize-space(@class), ' '), ' item ')][.//a[starts-with(@href, '/hash/')]]",
+      "title": ".//a[starts-with(@href, '/hash/')]/h4",
+      "date": "./div/p[1]",
+      "size": "",
+      "url": "",
+      "magnet": ".//a[starts-with(@href, '/hash/')]/@href"
+    }
+  },
+  {
+    "id": 10011,
+    "name": "磁力树",
+    "info": "人人都爱上的磁力连接搜索引擎",
+    "state": true,
+    "time": "2022-01-17 11:56:00",
+    "updateTime": "2023-01-31 10:45:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://www.ciliding.cyou/",
+      "searchUrl": "https://www.ciliding.cyou/search-[keyword]-0-0-[page].html",
+      "header": {}
+    },
+    "expressionModel": {
+      "group": "//div[@class='search_list']/dl",
+      "title": ".//a/span",
+      "date": ".//dd[@class='info']/span[1]",
+      "size": ".//dd[@class='info']/span[3]",
+      "url": "",
+      "magnet": ".//a/@href"
+    }
+  },
+  {
+    "id": 10012,
+    "name": "小草磁力",
+    "info": "高清电影、电视剧、软件、番号磁力链接搜索引擎",
+    "state": true,
+    "time": "2022-01-17 15:40:00",
+    "updateTime": "2026-10-22 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://www.xccl270.xyz",
+      "searchUrl": "https://www.xccl270.xyz/search/kw-[keyword]-[page].html",
+      "header": {
+        "Referer": "https://www.xccl270.xyz/"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' search-item ')][./div[@class='item-title']/h3/a[starts-with(@href, '/hash/')]]",
+      "title": "./div[@class='item-title']/h3/a/@title",
+      "date": "./div[@class='item-bar']/span[2]/b",
+      "size": "./div[@class='item-bar']/span[1]/b",
+      "url": "",
+      "magnet": "./div[@class='item-title']/h3/a[starts-with(@href, '/hash/')]/@href"
+    }
+  },
+  {
+    "id": 10013,
+    "name": "BT目录",
+    "info": "最好的资源聚合搜索引擎",
+    "state": true,
+    "time": "2022-01-17 16:01:00",
+    "updateTime": "2023-05-12 15:21:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://www.btmulu.cyou/",
+      "searchUrl": "https://www.btmulu.cyou/search/[keyword]/page-[page].html",
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+        "Cookie": "server_session_5f67f367=daa27e944af10472c1fd091bdce95e4d; ANACCOUNT=1d8f5576-7f65-49ff-b50c-67825926600e; ANASID=7f509fe7-1bf1-419a-bca3-ff191a708399; _pk_id.6.a88f=d98ff61b3e22dbb2.1793677808.; cf_clearance=CnMKODqwWtHhUQN6emg19hiXqEMY31T0vkQ1JrmRq4Du_kU3qFF1mPnlwMKU2LNj4EgePC_QVpR1KXDQuH5K-52o2jOhwfgR6XZy95yt5JK4vuj1si4vE4wpG_heEjGoTghGfM9fx6D_yeMTk_nMTq4mcgDqQgtpNq6ZAgF2-5Ojb4ynFlE0azrUJq6xjPtT0iv7zApbj3nJMXyt2GGdKplO-SrOhDc-QGD3faH08cd-cRSenRAzRVrgdu-Bm0cAj2e7TOjg85yNkj16K-FaDVoiL4wfC9EEt9xYST_eQ8DlxHuE7NL_lvtGx1AizA65ca75ZEIHXRBzfHrL; fad_011336197c37=f7a6aad0ba8fff366bfeffbaccbd1466efaf5d9b9d57f367851ac2bc04a86fa0a%3A2%3A%7Bi%3A0%3Bs%3A16%3A%22fad_011336197c37%22%3Bi%3A1%3Bs%3A31%3A%22%7B%22count%22%3A1%2C%22date%22%3A%222026-11-03%22%7D%22%3B%7D; fad_448aaf36059d=683750d0161095b8db030fe166a1b80e20865246fada0310aa253347f219af65a%3A2%3A%7Bi%3A0%3Bs%3A16%3A%22fad_448aaf36059d%22%3Bi%3A1%3Bs%3A31%3A%22%7B%22count%22%3A1%2C%22date%22%3A%222026-11-03%22%7D%22%3B%7D; _pk_ses.6.a88f=1"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@style='overflow: hidden;']",
+      "title": ".//a/h4[1]",
+      "date": ".//p",
+      "size": "",
+      "url": "",
+      "magnet": ".//a/@href"
+    }
+  },
+  {
+    "id": 10014,
+    "name": "简单动漫",
+    "info": "BT下载|动漫下载|动画|漫画",
+    "state": true,
+    "time": "2022-01-21 17:03:00",
+    "updateTime": "2023-05-12 15:21:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://so.acg17.cc/",
+      "searchUrl": "https://so.acg17.cc/s/index.php?searchInput=[keyword]&showLength=20&showMore=more",
+      "header": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "accept-language": "zh-CN,zh;q=0.9,fr;q=0.8",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "cross-site",
+        "sec-fetch-user": "?1",
+        "cookie": "verification=true",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//tbody[@id='data_list']/tr",
+      "title": ".//td[3]/a",
+      "date": ".//td[1]",
+      "size": ".//td[4]",
+      "url": "",
+      "magnet": ".//td[3]/a/@href"
+    }
+  },
+  {
+    "id": 10016,
+    "name": "torrentkitty",
+    "info": "Torrent Kitty - Free Torrent To Magnet Link Conversion Service",
+    "state": true,
+    "time": "2022-07-19 14:56:00",
+    "updateTime": "2022-08-27 16:30:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "",
+      "searchUrl": "https://www.torrentkitty.ink/search/[keyword]/[page]",
+      "header": {
+        "cookie": "cf_chl_2=7f03ffdff2ceca2; cf_chl_prog=x14; cf_clearance=9GFcqO92KR7.IJTPmKZ0eyMzj7lg_0XhUqxx4bGWxlA-1642768930-0-150; __cf_bm=HcoH1kl0v3dSps1nnyaEnyFMor.lMYqEKNURu5d_29s-1642768937-0-Adng6qL5UThcCnQpzbGbCP p9TwamNUI3AUSAa6PrzkbfWwm0KRFBSQja84p7ugt2Mu9m4b4S98U2AzzRVzBVBdFUEuyRPiQxj0F/u/Hj9KqXiw5xgQrpYXCRAJgM9k85A==; AdskeeperStorage={\"0\":{},\"C101338\":{\"page\":1,\"time\":1642768937824}}",
+        "origin": "https://www.torrentkitty.ink/",
+        "referer": "https://www.torrentkitty.ink/search/%E5%A4%8D%E4%BB%87%E8%80%85%E8%81%94%E7%9B%9F/1?__cf_chl_tk=KyxtLv2hp5trtWHu1Fl0d5Ck7uX0HKDirblH4Q4kxJw-1642768927-0-gaNycGzNB-U",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[@id='archiveResult']/tbody/tr",
+      "title": ".//td[1]",
+      "date": ".//td[3]",
+      "size": ".//td[2]",
+      "url": "",
+      "magnet": ".//td[4]/a[2]/@href"
+    }
+  },
+  {
+    "id": 10017,
+    "name": "吴签磁力",
+    "info": "推荐，干净、好用的磁力链和网盘资源搜索引擎！",
+    "state": true,
+    "time": "2022-08-27 17:24:00",
+    "updateTime": "2026-10-22 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://wuqianwo.cc",
+      "searchUrl": "https://wuqianwo.cc/search?keyword=[keyword]&sos=relevance&sofs=all&sot=all&soft=all&som=auto&p=[page]",
+      "header": {
+        "referer": "https://wuqianwo.cc/",
+        "Cookie": "JSESSIONID=40B1CA6D71D2B8BF15390EA6353F7428; aywcUid=lk68GEaygA_20261022164851; fct=dHYyfFY0fGxrNjhHRWF5Z0FfMjAyNjEwMjIxNjQ4NTF8MTc5MjY2MjUzMjU1MXxFM0Y3OA==",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='panel panel-default border-radius']",
+      "title": ".//div[@class='panel-heading']//h3",
+      "date": ".//div[@class='panel-footer']//span[3]",
+      "size": ".//div[@class='panel-footer']//span[1]",
+      "url": ".//div[@class='panel-heading']//a/@href",
+      "magnet": "//a[@id='magnet']/@href"
+    }
+  },
+  {
+    "id": 10018,
+    "name": "种子搜",
+    "info": "一个专业提供磁力链接搜索和下载的网站,索引了上千万磁力链接的搜索引擎，全球资源最丰富的磁力链接搜索下载网站和垂直搜索引擎，被誉为磁力链接搜索神器。",
+    "state": true,
+    "updateTime": "2026-10-22 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://zzb10.vip",
+      "searchUrl": "https://zzb10.vip/[keyword]&sort=rel&page=[page]",
+      "header": {
+        "Referer": "https://zzb10.vip/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//ul[@class='media-list']/li[@class='media']",
+      "title": "./div[@class='media-body']/h4/a",
+      "date": ".//div[@class='search-info']/span[@class='s_b'][1]",
+      "size": ".//div[@class='search-info']/span[@class='s_b'][2]",
+      "url": "./div[@class='media-body']/h4/a/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
+    "id": 10019,
+    "name": "磁力爬",
+    "info": "磁力爬搜索",
+    "state": true,
+    "time": "2022-08-29 10:09:00",
+    "updateTime": "2023-01-31 10:05:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://clp138.shop/",
+      "searchUrl": "https://clp138.shop/Search/[keyword]?page=[page]",
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36",
+        "cookie": "Challenge=vk6uk8TjOwMaZrxfLmVRTSnhtLxxvK0u5kU; Expires=1774242002; Signature=a3b708bc2cfaec46438ebadd7b622d9e6adefd38dfd5556ad0c9175c7d08ca52; UID_vk6uk8TjOwMaZrxfLmVRTSnhtLxxvK0u5kU=ok; XCCX=1; UGVyc2lzdFN0b3JhZ2U=%7B%7D; __PPU_tuid=7620296014981463608",
+        "referer": "https://clp138.shop/"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='panel panel-default']",
+      "title": ".//h5[@class='item-title']/a",
+      "date": ".//div[@class='panel-body']/span/i",
+      "size": ".//div[@class='panel-body']/span/b",
+      "url": "",
+      "magnet": ".//h5[@class='item-title']/a/@href"
+    }
+  },
+  {
+    "id": 10020,
+    "name": "BTMirror",
+    "info": "一个搜索你想要的东西的网站",
+    "state": true,
+    "time": "2022-08-29 10:30:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://btsao.com",
+      "searchUrl": "https://btsao.com/zh-cn/search/[keyword]/[page]?c=&s=create_time",
+      "header": {}
+    },
+    "expressionModel": {
+      "group": "//div[@class='ssbox']",
+      "title": ".//div[@class='test1']",
+      "date": ".//div[@class='sbar']/span[3]/b",
+      "size": ".//div[@class='sbar']/span[4]/b",
+      "url": ".//div[@class='sbar']/span[2]/a/@href",
+      "magnet": "//p[@class='dd magnet']/a/@href"
+    }
+  },
+  {
+    "id": 10022,
+    "name": "磁力海",
+    "info": "人人都爱上的磁力连接搜索引擎",
+    "state": true,
+    "time": "2023-01-31 11:24:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://clhztop-666971be0d3df.towercloud.world",
+      "searchUrl": "https://clhztop-666971be0d3df.towercloud.world/search_plus.php?keywords=[keyword]&page=[page]&action=1",
+      "header": {}
+    },
+    "expressionModel": {
+      "group": "//div[@class='search_list']/dl[@class='detail']",
+      "title": ".//dt",
+      "date": ".//dd[@class['info']]/span[1]",
+      "size": ".//dd[@class['info']]/span[3]",
+      "url": "",
+      "magnet": ".//dt/a/@href"
+    }
+  },
+  {
+    "id": 10023,
+    "name": "飞鱼磁力",
+    "info": "自由、专业的磁力链接搜索引擎",
+    "state": true,
+    "time": "2023-01-31 11:50:00",
+    "updateTime": "2023-05-12 16:17:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://www.xccl238.xyz/",
+      "searchUrl": "https://www.xccl238.xyz/search/kw-[keyword]-[page].html",
+      "header": {}
+    },
+    "expressionModel": {
+      "group": "//div[@class='search-item detail-width']",
+      "title": ".//h3/a",
+      "date": ".//div[@class='item-bar']/span[2]",
+      "size": ".//div[@class='item-bar']/span[1]",
+      "url": "",
+      "magnet": ".//h3/a/@href"
+    }
+  },
+  {
+    "id": 10024,
+    "name": "动漫花园",
+    "info": "動漫花園資源網 - 動漫愛好者的自由交流平台",
+    "state": true,
+    "time": "2023-01-31 12:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://dmhy.anoneko.com/",
+      "searchUrl": "https://dmhy.anoneko.com/topics/list/page/[page]?keyword=[keyword]",
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[@class='tablesorter']/tbody/tr",
+      "title": ".//td[@class='title']/a",
+      "date": ".//dd[@class'info']",
+      "size": "",
+      "url": ".//td[@class='title']/a/@href",
+      "magnet": "//a[@id='magnet2']"
+    }
+  },
+  {
+    "id": 10025,
+    "name": "磁力天堂",
+    "info": "磁力天堂搜索引擎是功能强大的磁力搜索引擎，牛逼的番号搜索、磁力搜索功能，更好用的BT种子搜索引擎！",
+    "state": true,
+    "time": "2023-01-31 14:57:00",
+    "updateTime": "2026-10-22 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://i4m4s9em.770680.xyz",
+      "searchUrl": "https://i4m4s9em.770680.xyz/search-[keyword]-0-0-[page].html?time_range=all",
+      "header": {
+        "Referer": "https://i4m4s9em.770680.xyz/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//article[contains(concat(' ', normalize-space(@class), ' '), ' zsky-result-row ')]",
+      "title": ".//a[contains(concat(' ', normalize-space(@class), ' '), ' zsky-result-link ')]",
+      "date": ".//div[@class='zsky-result-meta']/span[1]",
+      "size": ".//div[@class='zsky-result-meta']/span[2]",
+      "url": "",
+      "magnet": ".//a[contains(concat(' ', normalize-space(@class), ' '), ' zsky-result-link ')][starts-with(@href, '/hash/')]/@href"
+    }
+  },
+  {
+    "id": 10026,
+    "name": "海盗船",
+    "info": "Download music, movies, games, software! The Pirate Bay - The galaxy's most resilient BitTorrent site",
+    "state": true,
+    "time": "2023-01-31 15:09:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://thepiratebay10.xyz/",
+      "searchUrl": "https://thepiratebay10.xyz/search/[keyword]/[page]/99/0",
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[@id='searchResult']//tr",
+      "title": ".//tr/td/a['title']",
+      "date": ".//font[@class='detDesc']",
+      "size": "",
+      "url": "",
+      "magnet": ".//td/a/@href"
+    }
+  },
+  {
+    "id": 10027,
+    "name": "磁力多",
+    "info": "推荐，国内资源非常丰富的磁力搜索引擎！",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://doc2.htmcdn.com:39988/",
+      "searchUrl": "https://doc2.htmcdn.com:39988/search?word=[keyword]&sort=&page=[page]",
+      "header": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-language": "zh-CN,zh;q=0.9",
+        "referer": "https://doc2.htmcdn.com:39988/search?word=%E7%BE%8E%E5%A5%B3",
+        "sec-ch-ua": "\"Chromium\";v=\"21\", \" Not;A Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "iframe",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='tbox']/div[@class='ssbox']",
+      "title": ".//div[@class='title']/h3/a",
+      "date": ".//div[@class='sbar']/span[2]/b",
+      "size": ".//div[@class='sbar']/span[3]/b",
+      "url": "",
+      "magnet": ".//div[@class='title']/h3/a/@href"
+    }
+  },
+  {
+    "id": 10028,
+    "name": "磁狐搜索",
+    "info": "推荐，国内资源非常丰富的磁力搜索引擎！",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://doc2.htmcdn.com:39988/",
+      "searchUrl": "https://doc2.htmcdn.com:39988/search?word=[keyword]&sort=&page=[page]",
+      "header": {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "accept-language": "zh-CN,zh;q=0.9",
+        "referer": "https://doc2.htmcdn.com:39988/search?word=%E7%BE%8E%E5%A5%B3",
+        "sec-ch-ua": "\"Chromium\";v=\"21\", \" Not;A Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "iframe",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@class='tbox']/div[@class='ssbox']",
+      "title": ".//div[@class='title']/h3/a",
+      "date": ".//div[@class='sbar']/span[2]/b",
+      "size": ".//div[@class='sbar']/span[3]/b",
+      "url": "",
+      "magnet": ".//div[@class='title']/h3/a/@href"
+    }
+  },
+  {
+    "id": 10029,
+    "name": "SKrBT",
+    "info": "推荐，国内资源非常丰富的磁力搜索引擎！",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-22 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://skrbttv.top",
+      "searchUrl": "https://skrbttv.top/search?keyword=[keyword]&sos=relevance&sofs=all&sot=all&soft=all&som=auto&p=[page]",
+      "header": {
+        "Referer": "https://skrbttv.top/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
+        "Cookie": "JSESSIONID=9A2B5FA73CA42077CD988080205A0809; aywcUid=2XIZMf5NyT_20261022181232; fct=dHYyfFY0fDJYSVpNZjVOeVRfMjAyNjEwMjIxODEyMzJ8MTc5MjY2NzU1NDE1MXwxRTgwRQ=="
+      }
+    },
+    "expressionModel": {
+      "group": "//ul[@class='list-unstyled']",
+      "title": ".//li[1]/a",
+      "date": ".//li[@class='rrmi']/span[contains(., '收录时间')]/span[@class='rrmiv']",
+      "size": ".//li[@class='rrmi']/span[contains(., '文件大小')]/span[@class='rrmiv']",
+      "url": ".//li[1]/a/@href",
+      "magnet": ".//li[@class='rrmi']/a[contains(@title, 'magnet')]/@href"
+    }
+  },
+  {
+    "id": 10030,
+    "name": "SoKitty",
+    "info": "磁力链接资源搜索",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-22 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://w1.sokitty.me",
+      "searchUrl": "https://w1.sokitty.me/search?key=[keyword]&page=[page]",
+      "header": {
+        "Referer": "https://w1.sokitty.me/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' search-panel ')][./div/h3/a[starts-with(@href, '/bt/')]]",
+      "title": "./div/h3/a[starts-with(@href, '/bt/')]",
+      "date": "./div[contains(concat(' ', normalize-space(@class), ' '), ' panel-footer ')]/span[3]",
+      "size": "./div[contains(concat(' ', normalize-space(@class), ' '), ' panel-footer ')]/span[1]",
+      "url": "",
+      "magnet": "./div/h3/a[starts-with(@href, '/bt/')]/@href"
+    }
+  },
+  {
+    "id": 10031,
+    "name": "52BT",
+    "info": "BT种子和磁力链接搜索引擎",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-22 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://77awkidr.529075.xyz",
+      "searchUrl": "https://77awkidr.529075.xyz/search-[keyword]-0-0-[page].html?lang=zh_CN",
+      "header": {
+        "Referer": "https://77awkidr.529075.xyz/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//article[contains(concat(' ', normalize-space(@class), ' '), ' resource-card ')]",
+      "title": "./h2/a",
+      "date": "./div[contains(concat(' ', normalize-space(@class), ' '), ' resource-meta ')]/span[1]",
+      "size": "./div[contains(concat(' ', normalize-space(@class), ' '), ' resource-meta ')]/span[2]",
+      "url": "",
+      "magnet": "./h2/a[starts-with(@href, '/hash/')]/@href"
+    }
+  },
+  {
+    "id": 10032,
+    "name": "天天磁力",
+    "info": "BT种子和磁力链接搜索引擎",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-23 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://so.ttbt.top",
+      "searchUrl": "https://so.ttbt.top/list.php?key=[keyword]&page=[page]&ap=4",
+      "header": {
+        "Referer": "https://so.ttbt.top/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' card ')][./div/h5/a[starts-with(@href, '/detail/')]]",
+      "title": "./div/h5/a[starts-with(@href, '/detail/')]",
+      "date": "./div/p[2]",
+      "size": "./div/p[1]/span[1]",
+      "url": "",
+      "magnet": "./div/h5/a[starts-with(@href, '/detail/')]/@href"
+    }
+  },
+  {
+    "id": 10033,
+    "name": "BT联盟",
+    "info": "BT种子和磁力链接搜索引擎",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-23 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://cdn.btlm.top:65533",
+      "searchUrl": "https://cdn.btlm.top:65533/s?word=[keyword]&page=[page]",
+      "header": {
+        "Referer": "https://cdn.btlm.top:65533/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//ul[contains(concat(' ', normalize-space(@class), ' '), ' list-unstyled ')][./li/h2/a[starts-with(@href, '/hash/')]]",
+      "title": "./li/h2/a[starts-with(@href, '/hash/')]",
+      "date": "./li[@class='result-resource-meta-info']/span[@class='result-resource-meta-info-value'][3]",
+      "size": "./li[@class='result-resource-meta-info']/span[@class='result-resource-meta-info-value'][1]",
+      "url": "",
+      "magnet": "./li/h2/a[starts-with(@href, '/hash/')]/@href"
+    }
+  },
+  {
+    "id": 10034,
+    "name": "磁力狐",
+    "info": "BT种子和磁力链接搜索引擎",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-23 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://cache.foxn.top",
+      "searchUrl": "https://cache.foxn.top/search?word=[keyword]&page=[page]",
+      "header": {
+        "Referer": "https://cache.foxn.top/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[@id='biuuu_city_list']//div[contains(concat(' ', normalize-space(@class), ' '), ' search-box ')][./h2/a[starts-with(@href, '/doc/')]]",
+      "title": "./h2/a[starts-with(@href, '/doc/')]/@title",
+      "date": "./div[contains(concat(' ', normalize-space(@class), ' '), ' layui-colla-content ')]/p[1]/span",
+      "size": "./div[contains(concat(' ', normalize-space(@class), ' '), ' layui-colla-content ')]/p[2]/span",
+      "url": "",
+      "magnet": "./h2/a[starts-with(@href, '/doc/')]/@href"
+    }
+  },
+  {
+    "id": 10035,
+    "name": "磁力搜索",
+    "info": "磁力链接资源搜索引擎",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-23 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "http://eclso.fun",
+      "searchUrl": "http://eclso.fun/soso/[keyword]_rel_[page].html",
+      "header": {
+        "Referer": "http://eclso.fun/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' search-item ')][./div[@class='item-title']/h3/a]",
+      "title": "./div[@class='item-title']/h3/a",
+      "date": "./div[@class='item-bar']/span[2]/b",
+      "size": "./div[@class='item-bar']/span[3]/b",
+      "url": "./div[@class='item-title']/h3/a/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
+    "id": 10036,
+    "name": "BTSOW",
+    "info": "BT种子和磁力链接搜索引擎",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-23 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://so2.btsow.top",
+      "searchUrl": "https://so2.btsow.top/search?key=[keyword]&page=[page]&ap=2",
+      "header": {
+        "Referer": "https://so2.btsow.top/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' card ')][./div/h5/a[starts-with(@href, '/hash/')]]",
+      "title": "./div/h5/a[starts-with(@href, '/hash/')]",
+      "date": "./div/p[contains(@class, 'card-text')][1]",
+      "size": "./div/div[contains(@class, 'card-subtitle')]/span[contains(@class, 'text-warning')]",
+      "url": "",
+      "magnet": "./div/p[contains(@class, 'card-text')][2]/a[starts-with(@href, 'magnet:')]/@href"
+    }
+  },
+  {
+    "id": 10037,
+    "name": "磁力星球",
+    "info": "磁力星球 BT 种子和磁力链接搜索",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-10-27 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://so.starcs.top",
+      "searchUrl": "https://so.starcs.top/search?word=[keyword]&page=[page]&sort=rel&ap=2",
+      "header": {
+        "Referer": "https://so.starcs.top/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' card ')][.//h5//a[contains(@href, '/hash/')]]",
+      "title": ".//h5//a[contains(@href, '/hash/')]",
+      "date": ".//p[contains(concat(' ', normalize-space(@class), ' '), ' card-text ')][1]",
+      "size": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' card-subtitle ')]//span[contains(concat(' ', normalize-space(@class), ' '), ' text-warning ')]",
+      "url": "",
+      "magnet": ".//a[starts-with(@href, 'magnet:')]/@href"
+    }
+  },
+  {
+    "id": 10038,
+    "name": "吃力网分享",
+    "info": "一站式全网磁力多引擎磁力种子搜索功能",
+    "state": true,
+    "time": "2022-01-16 21:03:00",
+    "updateTime": "2026-10-21 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "http://eclso.fun/",
+      "searchUrl": "http://eclso.fun/soso/[keyword]_rel_[page].html",
+      "header": {
+        "Host": "eclso.fun",
+        "Referer": "http://eclso.fun/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' search-item ')]",
+      "title": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-title ')]//h3/a",
+      "date": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-bar ')]/span[2]/b",
+      "size": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-bar ')]/span[3]/b",
+      "url": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-title ')]//h3/a/@href",
+      "magnet": "//input[@id='m_link']/@value"
+    }
+  },
+  {
+    "id": 10039,
+    "name": "高清族",
+    "info": "高清电影、电视剧磁力资源",
+    "state": true,
+    "time": "2026-10-29 00:00:00",
+    "updateTime": "2026-10-29 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://hdzu.org",
+      "searchUrl": "https://hdzu.org/movie/filter?act=title&wd=[keyword]&page=[page]",
+      "header": {
+        "Referer": "https://hdzu.org/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//ul[@id='list-topic']/li[contains(concat(' ', normalize-space(@class), ' '), ' topic-item ')]",
+      "title": ".//h2[contains(concat(' ', normalize-space(@class), ' '), ' topic-title ')]/a",
+      "date": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' topic-option ')]",
+      "size": ".//h2[contains(concat(' ', normalize-space(@class), ' '), ' topic-title ')]/span",
+      "url": ".//h2[contains(concat(' ', normalize-space(@class), ' '), ' topic-title ')]/a/@href",
+      "magnet": "//div[contains(concat(' ', normalize-space(@class), ' '), ' movie-url ')]//a[contains(concat(' ', normalize-space(@class), ' '), ' open-url ') and starts-with(@href, 'magnet:')]/@href"
+    }
+  },
+  {
+    "id": 10040,
+    "name": "Btkitty",
+    "info": "Btkitty magnet search",
+    "state": true,
+    "time": "2026-10-29 00:00:00",
+    "updateTime": "2026-10-29 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://btkitty0.com",
+      "searchUrl": "https://btkitty0.com/[keyword]&p=[page]",
+      "header": {
+        "Referer": "https://btkitty0.com/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[@id='archiveResult']//tr[td[@class='name']/a]",
+      "title": "./td[@class='name']/a",
+      "date": "",
+      "size": "./td[@class='size']",
+      "url": "./td[@class='name']/a/@href",
+      "magnet": "//textarea[contains(concat(' ', normalize-space(@class), ' '), ' magnet-link ')]"
+    }
+  },
+  {
+    "id": 10041,
+    "name": "磁力片",
+    "info": "磁力片 - 高效的磁力搜索工具",
+    "state": true,
+    "time": "2026-10-29 00:00:00",
+    "updateTime": "2026-11-03 00:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://so.btapp.top",
+      "searchUrl": "https://so.btapp.top/so.php?page=[page]&word=[keyword]",
+      "header": {
+        "Referer": "https://so.btapp.top/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[contains(concat(' ', normalize-space(@class), ' '), ' torrent-list ')]//tr[td[2]/a[starts-with(@href, '/view.php?id=')]]",
+      "title": "./td[2]/a[starts-with(@href, '/view.php?id=')]",
+      "date": "./td[5]",
+      "size": "./td[4]",
+      "url": "./td[2]/a[starts-with(@href, '/view.php?id=')]/@href",
+      "magnet": "//a[starts-with(@href, 'magnet:')]/@href"
+    }
+  }
+]
