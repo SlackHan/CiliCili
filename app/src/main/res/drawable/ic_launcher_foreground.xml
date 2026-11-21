@@ -3,17 +3,19 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Minimalist horseshoe magnet icon -->
-    <path
-        android:fillColor="#00000000"
-        android:pathData="M34,64 V44 A20,20 0 0 1 74,44 V64"
-        android:strokeWidth="10"
-        android:strokeColor="#64B5F6"
-        android:strokeLineCap="butt" />
-    <path
-        android:fillColor="#E3F2FD"
-        android:pathData="M29,64h10v12h-10z" />
-    <path
-        android:fillColor="#E3F2FD"
-        android:pathData="M69,64h10v12h-10z" />
+
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="45">
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M42,46.5 L42,58 A12,12 0 0,0 66,58 L66,35"
+            android:strokeWidth="8.5"
+            android:strokeColor="@color/ic_launcher_magnet"
+            android:strokeLineCap="butt" />
+        <path
+            android:fillColor="@color/ic_launcher_pole_accent"
+            android:pathData="M38.55,35 L45.45,35 A0.8,0.8 0 0,1 46.25,35.8 L46.25,43.2 A0.8,0.8 0 0,1 45.45,44 L38.55,44 A0.8,0.8 0 0,1 37.75,43.2 L37.75,35.8 A0.8,0.8 0 0,1 38.55,35 Z" />
+    </group>
 </vector>

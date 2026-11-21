@@ -33,6 +33,11 @@ data class InstrumentColors(
     val switchOffBg: Color,
     val switchOffKnob: Color,
     val dotGrid: Color,
+    val stealthBg: Color,
+    val stealthSurface: Color,
+    val stealthInk: Color,
+    val stealthBorder: Color,
+    val stealthChipBg: Color,
 )
 
 private val GraphitePalette = InstrumentColors(
@@ -56,6 +61,11 @@ private val GraphitePalette = InstrumentColors(
     switchOffBg = Color(0xFF2B303A),
     switchOffKnob = Color(0xFF9AA3B2),
     dotGrid = Color(0x16FFFFFF),
+    stealthBg = Color(0xFF131722),
+    stealthSurface = Color(0xFF171C28),
+    stealthInk = Color(0xFFA5B4FC),
+    stealthBorder = Color(0x4DA5B4FC),
+    stealthChipBg = Color(0x1FA5B4FC),
 )
 
 private val BraunLightPalette = InstrumentColors(
@@ -79,6 +89,11 @@ private val BraunLightPalette = InstrumentColors(
     switchOffBg = Color(0xFFCFD3CA),
     switchOffKnob = Color(0xFF525864),
     dotGrid = Color(0x1A131518),
+    stealthBg = Color(0xFFE5EAF2),
+    stealthSurface = Color(0xFFF3F6FA),
+    stealthInk = Color(0xFF2B3445),
+    stealthBorder = Color(0x522B3445),
+    stealthChipBg = Color(0x1A2B3445),
 )
 
 val LocalInstrumentColors = staticCompositionLocalOf { GraphitePalette }

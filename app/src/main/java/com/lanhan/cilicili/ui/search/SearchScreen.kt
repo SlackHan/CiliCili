@@ -6,6 +6,15 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -41,6 +50,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -56,16 +66,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -76,6 +92,7 @@ import com.lanhan.cilicili.domain.model.SiteExecutionState
 import com.lanhan.cilicili.domain.model.SiteHealthStatus
 import com.lanhan.cilicili.domain.model.SiteSearchStatus
 import com.lanhan.cilicili.domain.model.SortOption
+import com.lanhan.cilicili.ui.components.CiliIcons
 import com.lanhan.cilicili.ui.components.CloudflareVerifyDialog
 import com.lanhan.cilicili.ui.components.InstrumentHairline
 import com.lanhan.cilicili.ui.components.InstrumentTopBar
@@ -149,6 +166,7 @@ fun SearchScreen(
                         letterSpacing = 1.sp,
                         color = c.text,
                     )
+                    StealthModeBadge(visible = !isHome && state.incognitoMode)
                 }
             },
             trailing = {
@@ -356,6 +374,85 @@ fun SearchScreen(
 }
 
 @Composable
+private fun StealthModeBadge(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val c = InstrumentTheme.colors
+    AnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
+        enter = fadeIn(tween(200)) + expandHorizontally(tween(200)),
+        exit = fadeOut(tween(180)) + shrinkHorizontally(tween(180)),
+    ) {
+        Surface(
+            shape = RoundedCornerShape(4.dp),
+            color = c.stealthChipBg,
+            border = BorderStroke(1.dp, c.stealthBorder),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Icon(
+                    imageVector = CiliIcons.Incognito,
+                    contentDescription = null,
+                    modifier = Modifier.size(11.dp),
+                    tint = c.stealthInk,
+                )
+                Text(
+                    text = "无痕",
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold,
+                    color = c.stealthInk,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommandPromptGlyph(
+    incognitoMode: Boolean,
+    boxWidth: Dp,
+    fontSize: TextUnit,
+    iconSize: Dp,
+    label: String,
+) {
+    val c = InstrumentTheme.colors
+    Box(
+        modifier = Modifier.width(boxWidth),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Crossfade(
+            targetState = incognitoMode,
+            animationSpec = tween(200),
+            label = label,
+        ) { stealth ->
+            if (stealth) {
+                Icon(
+                    imageVector = CiliIcons.Incognito,
+                    contentDescription = "无痕模式",
+                    modifier = Modifier.size(iconSize),
+                    tint = c.stealthInk,
+                )
+            } else {
+                Text(
+                    text = ">_",
+                    fontSize = fontSize,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = c.accent,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun SearchHomeBody(
     state: SearchUiState,
     showSortMenu: Boolean,
@@ -369,10 +466,62 @@ private fun SearchHomeBody(
     onClearHistory: () -> Unit,
 ) {
     val c = InstrumentTheme.colors
+    val haptic = LocalHapticFeedback.current
+    val stealth = state.incognitoMode
+
+    val heroWashColor by animateColorAsState(
+        targetValue = if (stealth) c.stealthBg.copy(alpha = 0.65f) else Color.Transparent,
+        animationSpec = tween(260),
+        label = "heroWash",
+    )
+    val dotGridColor by animateColorAsState(
+        targetValue = if (stealth) c.stealthInk.copy(alpha = 0.16f) else c.dotGrid,
+        animationSpec = tween(260),
+        label = "dotGrid",
+    )
+    val cardBg by animateColorAsState(
+        targetValue = if (stealth) c.stealthSurface else c.panel,
+        animationSpec = tween(240),
+        label = "cardBg",
+    )
+    val cardBorder by animateColorAsState(
+        targetValue = if (stealth) c.stealthBorder else c.hairline,
+        animationSpec = tween(240),
+        label = "cardBorder",
+    )
+    val railAlpha by animateFloatAsState(
+        targetValue = if (stealth) 0.85f else 0f,
+        animationSpec = tween(240),
+        label = "railAlpha",
+    )
+    val chipBg by animateColorAsState(
+        targetValue = if (stealth) c.stealthChipBg else c.chip,
+        animationSpec = tween(220),
+        label = "chipBg",
+    )
+    val chipBorder by animateColorAsState(
+        targetValue = if (stealth) c.stealthBorder else c.hairline,
+        animationSpec = tween(220),
+        label = "chipBorder",
+    )
+    val chipText by animateColorAsState(
+        targetValue = if (stealth) c.stealthInk else c.text,
+        animationSpec = tween(220),
+        label = "chipText",
+    )
+    val haloAlpha by animateFloatAsState(
+        targetValue = if (stealth) 0.22f else 0f,
+        animationSpec = tween(220),
+        label = "haloAlpha",
+    )
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Dot-Matrix Hero Header + Structured Command Input
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(heroWashColor),
+        ) {
             Canvas(modifier = Modifier.matchParentSize()) {
                 val step = 14.dp.toPx()
                 val radius = 1.dp.toPx()
@@ -380,7 +529,7 @@ private fun SearchHomeBody(
                 while (x < size.width) {
                     var y = step / 2f
                     while (y < size.height) {
-                        drawCircle(color = c.dotGrid, radius = radius, center = Offset(x, y))
+                        drawCircle(color = dotGridColor, radius = radius, center = Offset(x, y))
                         y += step
                     }
                     x += step
@@ -398,22 +547,22 @@ private fun SearchHomeBody(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        if (state.incognitoMode) {
-                            Text(
-                                text = "无痕模式 · 不记录历史",
-                                fontSize = 11.sp,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.SemiBold,
-                                color = c.accent,
-                            )
-                        }
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         Text(
                             text = "多源磁力检索",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = c.text,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
+                        StealthModeBadge(visible = stealth)
                     }
                     NodeSignalBars(bars = state.signalBars)
                 }
@@ -422,10 +571,23 @@ private fun SearchHomeBody(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    color = c.panel,
-                    border = BorderStroke(1.dp, c.hairline),
+                    color = cardBg,
+                    border = BorderStroke(1.dp, cardBorder),
                 ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .drawWithContent {
+                                drawContent()
+                                if (railAlpha > 0f) {
+                                    drawRect(
+                                        color = c.stealthInk.copy(alpha = railAlpha),
+                                        topLeft = Offset.Zero,
+                                        size = Size(size.width, 2.dp.toPx()),
+                                    )
+                                }
+                            },
+                    ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -433,12 +595,12 @@ private fun SearchHomeBody(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            Text(
-                                text = ">_",
+                            CommandPromptGlyph(
+                                incognitoMode = stealth,
+                                boxWidth = 18.dp,
                                 fontSize = 13.sp,
-                                fontFamily = FontFamily.Monospace,
-                                fontWeight = FontWeight.Bold,
-                                color = c.accent,
+                                iconSize = 15.dp,
+                                label = "homePrompt",
                             )
                             BasicTextField(
                                 value = state.query,
@@ -456,12 +618,27 @@ private fun SearchHomeBody(
                                 decorationBox = { inner ->
                                     Box(contentAlignment = Alignment.CenterStart) {
                                         if (state.query.isEmpty()) {
-                                            Text(
-                                                text = "输入关键词、番号或 InfoHash...",
-                                                fontSize = 14.sp,
-                                                color = c.muted,
-                                                maxLines = 1,
-                                            )
+                                            Crossfade(
+                                                targetState = stealth,
+                                                animationSpec = tween(200),
+                                                label = "homePlaceholder",
+                                            ) { isStealth ->
+                                                Text(
+                                                    text = if (isStealth) {
+                                                        "无痕检索 · 关键词不写入本地历史..."
+                                                    } else {
+                                                        "输入关键词、番号或 InfoHash..."
+                                                    },
+                                                    fontSize = 14.sp,
+                                                    color = if (isStealth) {
+                                                        c.stealthInk.copy(alpha = 0.68f)
+                                                    } else {
+                                                        c.muted
+                                                    },
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                )
+                                            }
                                         }
                                         inner()
                                     }
@@ -500,13 +677,13 @@ private fun SearchHomeBody(
                             ) {
                                 // Incognito toggle
                                 Surface(
-                                    onClick = onToggleIncognito,
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        onToggleIncognito()
+                                    },
                                     shape = RoundedCornerShape(6.dp),
-                                    color = if (state.incognitoMode) c.activeBg else c.chip,
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (state.incognitoMode) c.activeBg else c.hairline,
-                                    ),
+                                    color = chipBg,
+                                    border = BorderStroke(1.dp, chipBorder),
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -516,17 +693,38 @@ private fun SearchHomeBody(
                                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                                     ) {
                                         Box(
-                                            modifier = Modifier
-                                                .size(6.dp)
-                                                .clip(CircleShape)
-                                                .background(if (state.incognitoMode) c.accent else c.muted),
-                                        )
+                                            modifier = Modifier.size(10.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            if (stealth) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(10.dp)
+                                                        .clip(CircleShape)
+                                                        .background(c.stealthInk.copy(alpha = haloAlpha)),
+                                                    contentAlignment = Alignment.Center,
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(6.dp)
+                                                            .clip(CircleShape)
+                                                            .background(c.stealthInk),
+                                                    )
+                                                }
+                                            } else {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(6.dp)
+                                                        .border(1.2.dp, c.muted, CircleShape),
+                                                )
+                                            }
+                                        }
                                         Text(
                                             text = "无痕",
                                             fontSize = 12.sp,
                                             fontFamily = FontFamily.Monospace,
                                             fontWeight = FontWeight.Medium,
-                                            color = if (state.incognitoMode) c.activeText else c.text,
+                                            color = chipText,
                                         )
                                     }
                                 }
@@ -611,12 +809,29 @@ private fun SearchHomeBody(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = "近期检索",
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = c.muted,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = "近期检索",
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = c.muted,
+                        )
+                        AnimatedVisibility(
+                            visible = stealth,
+                            enter = fadeIn(tween(200)),
+                            exit = fadeOut(tween(180)),
+                        ) {
+                            Text(
+                                text = "· 已暂停记录",
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = c.stealthInk.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
                     Text(
                         text = "清空",
                         fontSize = 12.sp,
@@ -740,6 +955,17 @@ private fun SearchResultsBody(
     onLoadNextPage: () -> Unit,
 ) {
     val c = InstrumentTheme.colors
+    val stealth = state.incognitoMode
+    val resultsBarBg by animateColorAsState(
+        targetValue = if (stealth) c.stealthSurface else c.panel,
+        animationSpec = tween(240),
+        label = "resultsBarBg",
+    )
+    val resultsBarBorder by animateColorAsState(
+        targetValue = if (stealth) c.stealthBorder else c.hairline,
+        animationSpec = tween(240),
+        label = "resultsBarBorder",
+    )
 
     Column(modifier = Modifier.fillMaxSize()) {
         // Editable Command Bar
@@ -772,8 +998,8 @@ private fun SearchResultsBody(
             Surface(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(6.dp),
-                color = c.panel,
-                border = BorderStroke(1.dp, c.hairline),
+                color = resultsBarBg,
+                border = BorderStroke(1.dp, resultsBarBorder),
             ) {
                 Row(
                     modifier = Modifier
@@ -782,12 +1008,12 @@ private fun SearchResultsBody(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Text(
-                        text = ">_",
+                    CommandPromptGlyph(
+                        incognitoMode = stealth,
+                        boxWidth = 16.dp,
                         fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        color = c.accent,
+                        iconSize = 14.dp,
+                        label = "resultsPrompt",
                     )
                     BasicTextField(
                         value = state.query,

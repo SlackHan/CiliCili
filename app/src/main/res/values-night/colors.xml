@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_bg">#111214</color>
+    <color name="ic_launcher_magnet">#F6F6F3</color>
+    <color name="ic_launcher_pole_accent">#FF4F1F</color>
+</resources>
