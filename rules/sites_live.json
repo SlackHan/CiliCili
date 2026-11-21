@@ -63,7 +63,6 @@
       "searchUrl": "https://wuqianwo.cc/search?keyword=[keyword]&sos=relevance&sofs=all&sot=all&soft=all&som=auto&p=[page]",
       "header": {
         "referer": "https://wuqianwo.cc/",
-        "Cookie": "JSESSIONID=40B1CA6D71D2B8BF15390EA6353F7428; aywcUid=lk68GEaygA_20261022164851; fct=dHYyfFY0fGxrNjhHRWF5Z0FfMjAyNjEwMjIxNjQ4NTF8MTc5MjY2MjUzMjU1MXxFM0Y3OA==",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
       }
     },
@@ -89,7 +88,6 @@
       "searchUrl": "https://clp138.shop/Search/[keyword]?page=[page]",
       "header": {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36",
-        "cookie": "Challenge=vk6uk8TjOwMaZrxfLmVRTSnhtLxxvK0u5kU; Expires=1774242002; Signature=a3b708bc2cfaec46438ebadd7b622d9e6adefd38dfd5556ad0c9175c7d08ca52; UID_vk6uk8TjOwMaZrxfLmVRTSnhtLxxvK0u5kU=ok; XCCX=1; UGVyc2lzdFN0b3JhZ2U=%7B%7D; __PPU_tuid=7620296014981463608",
         "referer": "https://clp138.shop/"
       }
     },
@@ -185,7 +183,7 @@
       "header": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         "accept-language": "zh-CN,zh;q=0.9",
-        "referer": "https://doc2.htmcdn.com:39988/search?word=%E7%BE%8E%E5%A5%B3",
+        "referer": "https://doc2.htmcdn.com:39988/",
         "sec-ch-ua": "\"Chromium\";v=\"21\", \" Not;A Brand\";v=\"99\"",
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": "\"Windows\"",
@@ -220,7 +218,7 @@
       "header": {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         "accept-language": "zh-CN,zh;q=0.9",
-        "referer": "https://doc2.htmcdn.com:39988/search?word=%E7%BE%8E%E5%A5%B3",
+        "referer": "https://doc2.htmcdn.com:39988/",
         "sec-ch-ua": "\"Chromium\";v=\"21\", \" Not;A Brand\";v=\"99\"",
         "sec-ch-ua-mobile": "?0",
         "sec-ch-ua-platform": "\"Windows\"",
@@ -255,8 +253,7 @@
       "searchUrl": "https://skrbttv.top/search?keyword=[keyword]&sos=relevance&sofs=all&sot=all&soft=all&som=auto&p=[page]",
       "header": {
         "Referer": "https://skrbttv.top/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
-        "Cookie": "JSESSIONID=9A2B5FA73CA42077CD988080205A0809; aywcUid=2XIZMf5NyT_20261022181232; fct=dHYyfFY0fDJYSVpNZjVOeVRfMjAyNjEwMjIxODEyMzJ8MTc5MjY2NzU1NDE1MXwxRTgwRQ=="
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36"
       }
     },
     "expressionModel": {

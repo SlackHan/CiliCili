@@ -27,3 +27,6 @@ Thumbs.db
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Local agent rules
+AGENTS.md
