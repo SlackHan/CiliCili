@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,10 +22,23 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    val releaseStorePath = System.getenv("RELEASE_STORE_FILE").orEmpty().trim()
-    val releaseStorePassword = System.getenv("RELEASE_STORE_PASSWORD").orEmpty()
-    val releaseKeyAlias = System.getenv("RELEASE_KEY_ALIAS").orEmpty().trim()
-    val releaseKeyPassword = System.getenv("RELEASE_KEY_PASSWORD").orEmpty()
+    val localProps = Properties().apply {
+        val localFile = rootProject.file("local.properties")
+        if (localFile.exists()) {
+            localFile.bufferedReader(Charsets.UTF_8).use { load(it) }
+        }
+    }
+
+    fun resolveSigningValue(key: String): String {
+        val envVal = System.getenv(key)
+        if (!envVal.isNullOrBlank()) return envVal
+        return localProps.getProperty(key).orEmpty()
+    }
+
+    val releaseStorePath = resolveSigningValue("RELEASE_STORE_FILE").trim()
+    val releaseStorePassword = resolveSigningValue("RELEASE_STORE_PASSWORD")
+    val releaseKeyAlias = resolveSigningValue("RELEASE_KEY_ALIAS").trim()
+    val releaseKeyPassword = resolveSigningValue("RELEASE_KEY_PASSWORD")
     val hasReleaseSigning = releaseStorePath.isNotBlank() &&
         releaseStorePassword.isNotBlank() &&
         releaseKeyAlias.isNotBlank() &&
