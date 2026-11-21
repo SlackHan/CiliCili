@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.lanhan.cilicili.AppContainer
+import com.lanhan.cilicili.data.local.BookmarkEntity
 import com.lanhan.cilicili.data.local.SearchHistoryEntity
+import com.lanhan.cilicili.data.local.toBookmarkEntity
 import com.lanhan.cilicili.domain.model.AggregatedMagnetItem
 import com.lanhan.cilicili.domain.model.DefaultResultAction
 import com.lanhan.cilicili.domain.model.DohProvider
@@ -66,6 +68,11 @@ data class SearchUiState(
     val siteStates: List<SiteExecutionState> = emptyList(),
     val sortOption: SortOption = SortOption.RELEVANCE,
     val minSizeFilter: MinSizeFilter = MinSizeFilter.ALL,
+    val secondaryFilterQuery: String = "",
+    val selectedSiteName: String? = null,
+    val bookmarks: List<BookmarkEntity> = emptyList(),
+    val bookmarkedKeys: Set<String> = emptySet(),
+    val showBookmarksSheet: Boolean = false,
     val history: List<String> = emptyList(),
     val incognitoMode: Boolean = false,
     val defaultAction: DefaultResultAction = DefaultResultAction.ASK,
@@ -80,6 +87,8 @@ data class SearchUiState(
 
 class SearchViewModel(private val container: AppContainer) : ViewModel() {
 
+    private val bookmarkDao = container.database.bookmarkDao()
+
     private val _query = MutableStateFlow("")
     private val _activeKeyword = MutableStateFlow("")
     private val _currentPage = MutableStateFlow(1)
@@ -90,6 +99,9 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
     private val _siteStates = MutableStateFlow<List<SiteExecutionState>>(emptyList())
     private val _sortOption = MutableStateFlow(SortOption.RELEVANCE)
     private val _minSizeFilter = MutableStateFlow(MinSizeFilter.ALL)
+    private val _secondaryFilterQuery = MutableStateFlow("")
+    private val _selectedSiteName = MutableStateFlow<String?>(null)
+    private val _showBookmarksSheet = MutableStateFlow(false)
     private val _sheetItem = MutableStateFlow<AggregatedMagnetItem?>(null)
     private val _cfTarget = MutableStateFlow<CfChallengeTarget?>(null)
 
@@ -103,6 +115,8 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
     private val settingsFlow = container.settingsRepository.settingsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, com.lanhan.cilicili.data.local.AppSettings())
     private val historyFlow = container.searchHistoryDao.observeRecent()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    private val bookmarksFlow = bookmarkDao.observeAll()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var searchJob: Job? = null
@@ -118,6 +132,10 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         _siteStates,
         _sortOption,
         _minSizeFilter,
+        _secondaryFilterQuery,
+        _selectedSiteName,
+        bookmarksFlow,
+        _showBookmarksSheet,
         historyFlow,
         settingsFlow,
         _sheetItem,
@@ -136,16 +154,28 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         val siteStates = values[7] as List<SiteExecutionState>
         val sortOption = values[8] as SortOption
         val minSizeFilter = values[9] as MinSizeFilter
+        val secondaryFilterQuery = values[10] as String
+        val selectedSiteName = values[11] as String?
         @Suppress("UNCHECKED_CAST")
-        val historyEntities = values[10] as List<SearchHistoryEntity>
-        val settings = values[11] as com.lanhan.cilicili.data.local.AppSettings
-        val sheetItem = values[12] as AggregatedMagnetItem?
-        val cfTarget = values[13] as CfChallengeTarget?
+        val bookmarks = values[12] as List<BookmarkEntity>
+        val showBookmarksSheet = values[13] as Boolean
         @Suppress("UNCHECKED_CAST")
-        val allRules = values[14] as List<SiteRule>
+        val historyEntities = values[14] as List<SearchHistoryEntity>
+        val settings = values[15] as com.lanhan.cilicili.data.local.AppSettings
+        val sheetItem = values[16] as AggregatedMagnetItem?
+        val cfTarget = values[17] as CfChallengeTarget?
+        @Suppress("UNCHECKED_CAST")
+        val allRules = values[18] as List<SiteRule>
 
         val aggregated = SearchOrchestrator.aggregateAndDeduplicate(rawResults)
-        val filtered = applyFilterAndSort(aggregated, minSizeFilter, sortOption)
+        val filtered = filterAndSortResults(
+            items = aggregated,
+            minSizeFilter = minSizeFilter,
+            sortOption = sortOption,
+            secondaryQuery = secondaryFilterQuery,
+            selectedSiteName = selectedSiteName,
+        )
+        val bookmarkedKeySet = bookmarks.mapTo(LinkedHashSet(bookmarks.size)) { it.dedupKey }
 
         val signalSample = allRules
             .sortedWith(
@@ -176,6 +206,11 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
             siteStates = siteStates,
             sortOption = sortOption,
             minSizeFilter = minSizeFilter,
+            secondaryFilterQuery = secondaryFilterQuery,
+            selectedSiteName = selectedSiteName,
+            bookmarks = bookmarks,
+            bookmarkedKeys = bookmarkedKeySet,
+            showBookmarksSheet = showBookmarksSheet,
             history = historyEntities.map { it.keyword },
             incognitoMode = settings.incognitoMode,
             defaultAction = settings.defaultAction,
@@ -191,6 +226,22 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
 
     fun onQueryChange(newValue: String) {
         _query.value = newValue
+    }
+
+    fun onSecondaryFilterChange(newValue: String) {
+        _secondaryFilterQuery.value = newValue
+    }
+
+    fun toggleSiteFilter(siteName: String?) {
+        _selectedSiteName.update { current ->
+            if (siteName == null || current == siteName) null else siteName
+        }
+    }
+
+    fun clearSecondaryFilters() {
+        _secondaryFilterQuery.value = ""
+        _selectedSiteName.value = null
+        _minSizeFilter.value = MinSizeFilter.ALL
     }
 
     fun submitSearch(keywordOverride: String? = null) {
@@ -210,6 +261,8 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         _activeKeyword.value = keyword
         _currentPage.value = 1
         _rawResults.value = emptyList()
+        _secondaryFilterQuery.value = ""
+        _selectedSiteName.value = null
         _siteStates.value = sites.map { SiteExecutionState(it, SiteSearchStatus.Pending) }
         _isSearching.value = true
         _isLoadingMore.value = false
@@ -292,6 +345,8 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         _currentPage.value = 1
         _rawResults.value = emptyList()
         _siteStates.value = emptyList()
+        _secondaryFilterQuery.value = ""
+        _selectedSiteName.value = null
         _isSearching.value = false
         _isLoadingMore.value = false
     }
@@ -306,6 +361,69 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             container.searchHistoryDao.clearAll()
         }
+    }
+
+    fun setShowBookmarksSheet(show: Boolean) {
+        _showBookmarksSheet.value = show
+    }
+
+    fun toggleBookmark(item: AggregatedMagnetItem) {
+        viewModelScope.launch {
+            val isAlreadyBookmarked = bookmarksFlow.value.any { it.dedupKey == item.dedupKey }
+            if (isAlreadyBookmarked) {
+                bookmarkDao.deleteByKey(item.dedupKey)
+                _effects.send(SearchEffect.Message("已从收藏夹移除"))
+            } else {
+                bookmarkDao.upsert(item.toBookmarkEntity())
+                if (settingsFlow.value.incognitoMode) {
+                    _effects.send(SearchEffect.Message("无痕模式下已暂存至本地收藏夹，用完可一键清空"))
+                } else {
+                    _effects.send(SearchEffect.Message("已加入稍后下载收藏夹"))
+                }
+            }
+        }
+    }
+
+    fun removeBookmark(dedupKey: String) {
+        viewModelScope.launch {
+            bookmarkDao.deleteByKey(dedupKey)
+        }
+    }
+
+    fun clearAllBookmarks() {
+        viewModelScope.launch {
+            bookmarkDao.clearAll()
+            _effects.send(SearchEffect.Message("已清空本地收藏夹"))
+        }
+    }
+
+    fun copyAllBookmarkedMagnets() {
+        viewModelScope.launch {
+            val current = bookmarksFlow.value
+            if (current.isEmpty()) {
+                _effects.send(SearchEffect.Message("收藏夹为空"))
+                return@launch
+            }
+            val magnets = current.mapNotNull { entity ->
+                entity.magnetUri?.takeIf { it.isNotBlank() }
+                    ?: entity.infoHash?.takeIf { it.isNotBlank() }?.let { "magnet:?xt=urn:btih:$it" }
+            }.distinct()
+            if (magnets.isEmpty()) {
+                _effects.send(SearchEffect.Message("收藏项需先点击单条「复制/下载」解析磁力链接"))
+                return@launch
+            }
+            val unresolvedCount = current.size - magnets.size
+            val label = if (unresolvedCount > 0) {
+                "已批量复制 ${magnets.size} 条磁力链（${unresolvedCount} 条待解析）"
+            } else {
+                "已批量复制 ${magnets.size} 条磁力链"
+            }
+            _effects.send(SearchEffect.CopyToClipboard(magnets.joinToString("\n"), label))
+        }
+    }
+
+    fun executeBookmarkAction(bookmark: BookmarkEntity, action: MagnetIntentAction) {
+        executeMagnetAction(bookmark.toAggregatedMagnetItem(), action)
     }
 
     fun onResultClicked(item: AggregatedMagnetItem) {
@@ -343,6 +461,16 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
                                 raw
                             }
                         }
+                    }
+                    // Sync resolved magnetUri back into bookmarks if this item is bookmarked
+                    val existingBookmark = bookmarksFlow.value.firstOrNull { it.dedupKey == item.dedupKey }
+                    if (existingBookmark != null) {
+                        bookmarkDao.upsert(
+                            existingBookmark.copy(
+                                magnetUri = result.magnetUri,
+                                infoHash = result.infoHash ?: existingBookmark.infoHash,
+                            ),
+                        )
                     }
                     dispatchResolvedMagnet(result.magnetUri, action)
                 }
@@ -432,23 +560,64 @@ class SearchViewModel(private val container: AppContainer) : ViewModel() {
         }
     }
 
-    private fun applyFilterAndSort(
-        items: List<AggregatedMagnetItem>,
-        minSizeFilter: MinSizeFilter,
-        sortOption: SortOption,
-    ): List<AggregatedMagnetItem> {
-        val filtered = if (minSizeFilter.minBytes > 0) {
-            items.filter { it.sizeBytes >= minSizeFilter.minBytes }
-        } else {
-            items
-        }
-        return when (sortOption) {
-            SortOption.RELEVANCE -> filtered
-            SortOption.SEEDERS_DESC -> filtered.sortedByDescending { it.seeders ?: -1 }
-            SortOption.SIZE_DESC -> filtered.sortedByDescending { it.sizeBytes }
-            SortOption.SIZE_ASC -> filtered.sortedBy { if (it.sizeBytes < 0) Long.MAX_VALUE else it.sizeBytes }
-            SortOption.DATE_DESC -> filtered.sortedByDescending { it.dateText }
-            SortOption.SOURCES_DESC -> filtered.sortedByDescending { it.sources.size }
+    companion object {
+        private val WHITESPACE_REGEX = Regex("\\s+")
+
+        fun filterAndSortResults(
+            items: List<AggregatedMagnetItem>,
+            minSizeFilter: MinSizeFilter = MinSizeFilter.ALL,
+            sortOption: SortOption = SortOption.RELEVANCE,
+            secondaryQuery: String = "",
+            selectedSiteName: String? = null,
+        ): List<AggregatedMagnetItem> {
+            val tokens = secondaryQuery
+                .trim()
+                .split(WHITESPACE_REGEX)
+                .filter { it.isNotBlank() }
+
+            val includeTerms = mutableListOf<String>()
+            val excludeTerms = mutableListOf<String>()
+            for (token in tokens) {
+                if (token.startsWith("-") || token.startsWith("!")) {
+                    val term = token.substring(1).trim()
+                    if (term.isNotEmpty()) {
+                        excludeTerms.add(term)
+                    }
+                } else {
+                    includeTerms.add(token)
+                }
+            }
+
+            val siteFilter = selectedSiteName?.takeIf { it.isNotBlank() }
+
+            val filtered = items.filter { item ->
+                if (minSizeFilter.minBytes > 0 && item.sizeBytes < minSizeFilter.minBytes) {
+                    return@filter false
+                }
+                if (siteFilter != null && item.sources.none { it.siteName == siteFilter }) {
+                    return@filter false
+                }
+                if (excludeTerms.isNotEmpty() && excludeTerms.any { term -> item.title.contains(term, ignoreCase = true) }) {
+                    return@filter false
+                }
+                if (includeTerms.isNotEmpty()) {
+                    val allMatched = includeTerms.all { term ->
+                        item.title.contains(term, ignoreCase = true) ||
+                            item.sources.any { src -> src.siteName.contains(term, ignoreCase = true) }
+                    }
+                    if (!allMatched) return@filter false
+                }
+                true
+            }
+
+            return when (sortOption) {
+                SortOption.RELEVANCE -> filtered
+                SortOption.SEEDERS_DESC -> filtered.sortedByDescending { it.seeders ?: -1 }
+                SortOption.SIZE_DESC -> filtered.sortedByDescending { it.sizeBytes }
+                SortOption.SIZE_ASC -> filtered.sortedBy { if (it.sizeBytes < 0) Long.MAX_VALUE else it.sizeBytes }
+                SortOption.DATE_DESC -> filtered.sortedByDescending { it.dateText }
+                SortOption.SOURCES_DESC -> filtered.sortedByDescending { it.sources.size }
+            }
         }
     }
 

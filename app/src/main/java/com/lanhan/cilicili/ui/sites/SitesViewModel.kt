@@ -51,7 +51,7 @@ data class SitesUiState(
     val searchQuery: String = "",
     val isCheckingHealth: Boolean = false,
     val healthProgress: HealthCheckProgress? = null,
-    val subscriptionUrl: String = "",
+    val subscriptionUrl: String = com.lanhan.cilicili.data.local.SettingsRepository.DEFAULT_SUBSCRIPTION_URL,
     val autoSyncSubscription: Boolean = true,
     val lastSubscriptionSyncAt: Long = 0L,
     val lastSubscriptionSyncSummary: String = "",
@@ -238,6 +238,7 @@ class SitesViewModel(private val container: AppContainer) : ViewModel() {
                         rawJson = text,
                         replaceAll = replaceAll,
                         preserveApiSources = true,
+                        deactivateMissingPublicSites = !replaceAll,
                     )
                 }.onSuccess { count ->
                     container.settingsRepository.recordSubscriptionSync(

@@ -25,7 +25,7 @@ data class AppSettings(
     val defaultAction: DefaultResultAction = DefaultResultAction.ASK,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
-    val subscriptionUrl: String = "",
+    val subscriptionUrl: String = SettingsRepository.DEFAULT_SUBSCRIPTION_URL,
     val autoSyncSubscription: Boolean = true,
     val subscriptionSyncIntervalHours: Int = 24,
     val lastSubscriptionSyncAt: Long = 0L,
@@ -65,7 +65,7 @@ class SettingsRepository(private val context: Context) {
                 ?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
                 ?: ThemeMode.SYSTEM,
             dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: true,
-            subscriptionUrl = prefs[Keys.SUBSCRIPTION_URL].orEmpty(),
+            subscriptionUrl = prefs[Keys.SUBSCRIPTION_URL] ?: DEFAULT_SUBSCRIPTION_URL,
             autoSyncSubscription = prefs[Keys.AUTO_SYNC_SUBSCRIPTION] ?: true,
             subscriptionSyncIntervalHours = 24,
             lastSubscriptionSyncAt = prefs[Keys.LAST_SUBSCRIPTION_SYNC_AT] ?: 0L,
@@ -125,5 +125,18 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun markBuiltInPublicSourcesSeeded() {
         context.dataStore.edit { it[Keys.BUILT_IN_PUBLIC_SOURCES_SEEDED] = true }
+    }
+
+    companion object {
+        const val OFFICIAL_GITHUB_RAW_SUBSCRIPTION_URL =
+            "https://raw.githubusercontent.com/SlackHan/CiliCili/main/rules/sites_live.json"
+        const val OFFICIAL_CDN_SUBSCRIPTION_URL =
+            "https://fastly.jsdelivr.net/gh/SlackHan/CiliCili@main/rules/sites_live.json"
+        const val DEFAULT_SUBSCRIPTION_URL = OFFICIAL_GITHUB_RAW_SUBSCRIPTION_URL
+
+        val OFFICIAL_SUBSCRIPTION_PRESETS: List<Pair<String, String>> = listOf(
+            "填入官方源 (GitHub Raw)" to OFFICIAL_GITHUB_RAW_SUBSCRIPTION_URL,
+            "填入官方源 (CDN 镜像)" to OFFICIAL_CDN_SUBSCRIPTION_URL,
+        )
     }
 }

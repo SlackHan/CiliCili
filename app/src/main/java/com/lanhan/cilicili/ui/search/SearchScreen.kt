@@ -11,10 +11,8 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -24,8 +22,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,15 +40,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
@@ -80,25 +70,19 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lanhan.cilicili.domain.model.AggregatedMagnetItem
 import com.lanhan.cilicili.domain.model.DohProvider
 import com.lanhan.cilicili.domain.model.MinSizeFilter
-import com.lanhan.cilicili.domain.model.SiteExecutionState
-import com.lanhan.cilicili.domain.model.SiteHealthStatus
 import com.lanhan.cilicili.domain.model.SiteSearchStatus
 import com.lanhan.cilicili.domain.model.SortOption
-import com.lanhan.cilicili.ui.components.CiliIcons
 import com.lanhan.cilicili.ui.components.CloudflareVerifyDialog
 import com.lanhan.cilicili.ui.components.InstrumentHairline
 import com.lanhan.cilicili.ui.components.InstrumentTopBar
 import com.lanhan.cilicili.ui.theme.InstrumentTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
@@ -183,19 +167,28 @@ fun SearchScreen(
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(if (state.healthySiteCount > 0) c.ok else c.muted),
-                    )
-                    Text(
-                        text = "$nodeSummary · $dnsLabel",
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = c.muted,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(if (state.healthySiteCount > 0) c.ok else c.muted),
+                        )
+                        Text(
+                            text = "$nodeSummary · $dnsLabel",
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = c.muted,
+                        )
+                    }
+                    BookmarksEntryBadge(
+                        count = state.bookmarks.size,
+                        onClick = { viewModel.setShowBookmarksSheet(true) },
                     )
                 }
             },
@@ -213,6 +206,7 @@ fun SearchScreen(
                 },
                 onToggleIncognito = viewModel::toggleIncognito,
                 onSelectSort = viewModel::setSortOption,
+                onOpenBookmarks = { viewModel.setShowBookmarksSheet(true) },
                 onClickHistory = { kw ->
                     focusManager.clearFocus()
                     viewModel.submitSearch(kw)
@@ -239,8 +233,12 @@ fun SearchScreen(
                 },
                 onSelectSort = viewModel::setSortOption,
                 onSelectMinSize = viewModel::setMinSizeFilter,
+                onSecondaryFilterChange = viewModel::onSecondaryFilterChange,
+                onToggleSiteFilter = viewModel::toggleSiteFilter,
+                onClearFilters = viewModel::clearSecondaryFilters,
                 onOpenSiteStates = { showSiteStatusSheet = true },
                 onResultClicked = viewModel::onResultClicked,
+                onToggleBookmark = viewModel::toggleBookmark,
                 onCopyClick = { viewModel.executeMagnetAction(it, MagnetIntentAction.COPY) },
                 onDownloadClick = { viewModel.executeMagnetAction(it, MagnetIntentAction.OPEN_DOWNLOADER) },
                 onLoadNextPage = viewModel::loadNextPage,
@@ -250,116 +248,49 @@ fun SearchScreen(
 
     // Bottom Sheet: Result Action Chooser
     state.sheetItem?.let { item ->
-        ModalBottomSheet(
-            onDismissRequest = viewModel::dismissSheet,
-            containerColor = c.panel,
-            contentColor = c.text,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-            ) {
-                Text(
-                    text = item.title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = c.text,
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                val meta = buildList {
-                    if (item.sizeText.isNotBlank()) add(item.sizeText)
-                    item.seeders?.let { add("做种 $it") }
-                    if (item.dateText.isNotBlank()) add(item.dateText)
-                    add(item.sources.joinToString(", ") { it.siteName })
-                }.joinToString(" · ")
-                Text(
-                    text = meta,
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = c.muted,
-                )
-                if (!item.infoHash.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "#${item.infoHash}",
-                        fontSize = 11.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = c.muted,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    OutlinedButton(
-                        onClick = { viewModel.executeMagnetAction(item, MagnetIntentAction.COPY) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, c.hairline),
-                    ) {
-                        Text("复制磁力", color = c.text, fontFamily = FontFamily.Monospace)
-                    }
-                    Button(
-                        onClick = { viewModel.executeMagnetAction(item, MagnetIntentAction.OPEN_DOWNLOADER) },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = c.accent,
-                            contentColor = c.onAccent,
-                        ),
-                    ) {
-                        Text("唤起下载器", fontFamily = FontFamily.Monospace)
-                    }
-                }
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-        }
+        ResultActionBottomSheet(
+            item = item,
+            isBookmarked = state.bookmarkedKeys.contains(item.dedupKey),
+            onDismiss = viewModel::dismissSheet,
+            onToggleBookmark = { viewModel.toggleBookmark(item) },
+            onCopyMagnet = { viewModel.executeMagnetAction(item, MagnetIntentAction.COPY) },
+            onOpenDownloader = { viewModel.executeMagnetAction(item, MagnetIntentAction.OPEN_DOWNLOADER) },
+        )
     }
 
-    // Bottom Sheet: Per-site execution statuses + one-tap CF challenge trigger
+    // Bottom Sheet: Per-site execution statuses + one-tap CF challenge trigger + site filter
     if (showSiteStatusSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSiteStatusSheet = false },
-            containerColor = c.panel,
-            contentColor = c.text,
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            ) {
-                Text(
-                    text = "各站点本次响应 (${state.siteStates.size})",
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.SemiBold,
-                    color = c.text,
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                InstrumentHairline()
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(380.dp),
-                ) {
-                    items(state.siteStates, key = { it.site.id }) { siteState ->
-                        SiteExecutionRow(
-                            siteState = siteState,
-                            onVerifyCf = { challengeUrl ->
-                                showSiteStatusSheet = false
-                                viewModel.openCfChallengeForSite(siteState.site, challengeUrl)
-                            },
-                        )
-                        InstrumentHairline()
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
+        SiteStatusBottomSheet(
+            siteStates = state.siteStates,
+            selectedSiteName = state.selectedSiteName,
+            onDismiss = { showSiteStatusSheet = false },
+            onToggleSiteFilter = { siteName ->
+                viewModel.toggleSiteFilter(siteName)
+            },
+            onVerifyCf = { siteState, challengeUrl ->
+                showSiteStatusSheet = false
+                viewModel.openCfChallengeForSite(siteState.site, challengeUrl)
+            },
+        )
+    }
+
+    // Bottom Sheet: Local Bookmarks / Download Later Drawer
+    if (state.showBookmarksSheet) {
+        BookmarksBottomSheet(
+            bookmarks = state.bookmarks,
+            incognitoMode = state.incognitoMode,
+            resolvingDedupKey = state.resolvingDedupKey,
+            onDismiss = { viewModel.setShowBookmarksSheet(false) },
+            onCopyAllMagnets = viewModel::copyAllBookmarkedMagnets,
+            onClearAll = viewModel::clearAllBookmarks,
+            onCopyBookmark = { bookmark ->
+                viewModel.executeBookmarkAction(bookmark, MagnetIntentAction.COPY)
+            },
+            onDownloadBookmark = { bookmark ->
+                viewModel.executeBookmarkAction(bookmark, MagnetIntentAction.OPEN_DOWNLOADER)
+            },
+            onRemoveBookmark = viewModel::removeBookmark,
+        )
     }
 
     // On-Demand Sandboxed WebView CF Verification Dialog
@@ -374,85 +305,6 @@ fun SearchScreen(
 }
 
 @Composable
-private fun StealthModeBadge(
-    visible: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val c = InstrumentTheme.colors
-    AnimatedVisibility(
-        visible = visible,
-        modifier = modifier,
-        enter = fadeIn(tween(200)) + expandHorizontally(tween(200)),
-        exit = fadeOut(tween(180)) + shrinkHorizontally(tween(180)),
-    ) {
-        Surface(
-            shape = RoundedCornerShape(4.dp),
-            color = c.stealthChipBg,
-            border = BorderStroke(1.dp, c.stealthBorder),
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    imageVector = CiliIcons.Incognito,
-                    contentDescription = null,
-                    modifier = Modifier.size(11.dp),
-                    tint = c.stealthInk,
-                )
-                Text(
-                    text = "无痕",
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.SemiBold,
-                    color = c.stealthInk,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CommandPromptGlyph(
-    incognitoMode: Boolean,
-    boxWidth: Dp,
-    fontSize: TextUnit,
-    iconSize: Dp,
-    label: String,
-) {
-    val c = InstrumentTheme.colors
-    Box(
-        modifier = Modifier.width(boxWidth),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Crossfade(
-            targetState = incognitoMode,
-            animationSpec = tween(200),
-            label = label,
-        ) { stealth ->
-            if (stealth) {
-                Icon(
-                    imageVector = CiliIcons.Incognito,
-                    contentDescription = "无痕模式",
-                    modifier = Modifier.size(iconSize),
-                    tint = c.stealthInk,
-                )
-            } else {
-                Text(
-                    text = ">_",
-                    fontSize = fontSize,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    color = c.accent,
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun SearchHomeBody(
     state: SearchUiState,
     showSortMenu: Boolean,
@@ -461,6 +313,7 @@ private fun SearchHomeBody(
     onSubmitSearch: () -> Unit,
     onToggleIncognito: () -> Unit,
     onSelectSort: (SortOption) -> Unit,
+    onOpenBookmarks: () -> Unit,
     onClickHistory: (String) -> Unit,
     onDeleteHistory: (String) -> Unit,
     onClearHistory: () -> Unit,
@@ -766,6 +619,30 @@ private fun SearchHomeBody(
                                         }
                                     }
                                 }
+
+                                // Bookmarks / Download later shortcut chip
+                                val hasBookmarks = state.bookmarks.isNotEmpty()
+                                Surface(
+                                    onClick = onOpenBookmarks,
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (hasBookmarks) c.accent.copy(alpha = 0.14f) else c.chip,
+                                    border = BorderStroke(1.dp, if (hasBookmarks) c.accent else c.hairline),
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .height(32.dp)
+                                            .padding(horizontal = 9.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            text = "★ ${state.bookmarks.size}",
+                                            fontSize = 12.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = if (hasBookmarks) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (hasBookmarks) c.accent else c.muted,
+                                        )
+                                    }
+                                }
                             }
 
                             // Primary CTA
@@ -902,40 +779,6 @@ private fun SearchHomeBody(
 }
 
 @Composable
-private fun NodeSignalBars(bars: List<SiteSignalBar>) {
-    val c = InstrumentTheme.colors
-    if (bars.isEmpty()) return
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-        verticalAlignment = Alignment.Bottom,
-        modifier = Modifier.height(24.dp),
-    ) {
-        bars.forEach { bar ->
-            val (heightDp, color) = when (bar.status) {
-                SiteHealthStatus.OK -> {
-                    val ms = bar.latencyMs ?: 400L
-                    val h = when {
-                        ms < 300L -> 22.dp
-                        ms < 800L -> 16.dp
-                        else -> 12.dp
-                    }
-                    h to c.ok
-                }
-                SiteHealthStatus.CF_CHALLENGE -> 10.dp to c.warn
-                else -> 6.dp to c.fail
-            }
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(heightDp)
-                    .clip(RoundedCornerShape(1.dp))
-                    .background(color),
-            )
-        }
-    }
-}
-
-@Composable
 private fun SearchResultsBody(
     state: SearchUiState,
     showSortMenu: Boolean,
@@ -948,8 +791,12 @@ private fun SearchResultsBody(
     onBackHome: () -> Unit,
     onSelectSort: (SortOption) -> Unit,
     onSelectMinSize: (MinSizeFilter) -> Unit,
+    onSecondaryFilterChange: (String) -> Unit,
+    onToggleSiteFilter: (String?) -> Unit,
+    onClearFilters: () -> Unit,
     onOpenSiteStates: () -> Unit,
     onResultClicked: (AggregatedMagnetItem) -> Unit,
+    onToggleBookmark: (AggregatedMagnetItem) -> Unit,
     onCopyClick: (AggregatedMagnetItem) -> Unit,
     onDownloadClick: (AggregatedMagnetItem) -> Unit,
     onLoadNextPage: () -> Unit,
@@ -1067,7 +914,7 @@ private fun SearchResultsBody(
             InstrumentHairline()
         }
 
-        // Telemetry + Sort + Size Filter Strip
+        // Telemetry + Sort + Size Filter + Per-Site Clickable Progress Capsules Strip
         val successCount = state.siteStates.count { it.status is SiteSearchStatus.Success }
         val cfCount = state.siteStates.count { it.status is SiteSearchStatus.ChallengeRequired }
         val runningCount = state.siteStates.count {
@@ -1205,7 +1052,28 @@ private fun SearchResultsBody(
                     }
                 }
             }
+
+            // Clickable site progress capsules for 1-tap "only this site" filtering
+            state.siteStates.forEach { siteState ->
+                SiteProgressFilterCapsule(
+                    siteState = siteState,
+                    isSelected = state.selectedSiteName == siteState.site.name,
+                    onClick = { onToggleSiteFilter(siteState.site.name) },
+                )
+            }
         }
+
+        InstrumentHairline()
+
+        // Secondary Filter Toolbar (Inline keyword / -exclude input + active site badge)
+        SecondaryFilterToolbar(
+            secondaryQuery = state.secondaryFilterQuery,
+            selectedSiteName = state.selectedSiteName,
+            displayedCount = state.displayedResults.size,
+            totalCount = state.totalAggregatedCount,
+            onSecondaryQueryChange = onSecondaryFilterChange,
+            onClearSiteFilter = { onToggleSiteFilter(null) },
+        )
 
         InstrumentHairline()
 
@@ -1220,9 +1088,12 @@ private fun SearchResultsBody(
                     modifier = Modifier.padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
+                    val hasAnyFilter = state.minSizeFilter != MinSizeFilter.ALL ||
+                        state.secondaryFilterQuery.isNotBlank() ||
+                        !state.selectedSiteName.isNullOrBlank()
                     Text(
                         text = if (state.totalAggregatedCount > 0) {
-                            "结果已被当前体积条件过滤"
+                            "结果已被当前筛选条件过滤（共 ${state.totalAggregatedCount} 条原始结果）"
                         } else {
                             "未找到「${state.activeKeyword}」相关资源"
                         },
@@ -1231,18 +1102,22 @@ private fun SearchResultsBody(
                         color = c.text,
                     )
                     Text(
-                        text = "可点击上方状态胶囊查看站点响应，或在「节点」页测活。",
+                        text = if (state.totalAggregatedCount > 0) {
+                            "可清除二次筛选词、站点限制或体积条件以恢复显示。"
+                        } else {
+                            "可点击上方状态胶囊查看站点响应，或在「节点」页测活。"
+                        },
                         fontSize = 12.sp,
                         color = c.muted,
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (state.minSizeFilter != MinSizeFilter.ALL) {
+                        if (hasAnyFilter) {
                             OutlinedButton(
-                                onClick = { onSelectMinSize(MinSizeFilter.ALL) },
+                                onClick = onClearFilters,
                                 shape = RoundedCornerShape(6.dp),
                                 border = BorderStroke(1.dp, c.hairline),
                             ) {
-                                Text("重置体积", color = c.text, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                                Text("重置筛选条件", color = c.text, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                             }
                         }
                         OutlinedButton(
@@ -1266,10 +1141,13 @@ private fun SearchResultsBody(
                 ) { item ->
                     MagnetResultRow(
                         item = item,
+                        isBookmarked = state.bookmarkedKeys.contains(item.dedupKey),
                         isResolving = state.resolvingDedupKey == item.dedupKey,
                         onRowClick = { onResultClicked(item) },
+                        onToggleBookmark = { onToggleBookmark(item) },
                         onCopyClick = { onCopyClick(item) },
                         onDownloadClick = { onDownloadClick(item) },
+                        onSiteClick = { siteName -> onToggleSiteFilter(siteName) },
                     )
                     InstrumentHairline()
                 }
@@ -1310,224 +1188,6 @@ private fun SearchResultsBody(
             }
         }
     }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun MagnetResultRow(
-    item: AggregatedMagnetItem,
-    isResolving: Boolean,
-    onRowClick: () -> Unit,
-    onCopyClick: () -> Unit,
-    onDownloadClick: () -> Unit,
-) {
-    val c = InstrumentTheme.colors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = !isResolving, onClick = onRowClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = item.title,
-            fontSize = 14.sp,
-            lineHeight = 20.sp,
-            fontWeight = FontWeight.Medium,
-            color = c.text,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            val sourceLabel = if (item.sources.size > 1) {
-                "${item.primarySource.siteName} +${item.sources.size - 1}"
-            } else {
-                item.primarySource.siteName
-            }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(c.chip)
-                    .border(1.dp, c.hairline, RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = sourceLabel,
-                    fontSize = 11.sp,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.SemiBold,
-                    color = c.text,
-                )
-            }
-
-            if (item.sizeText.isNotBlank()) {
-                Text(
-                    text = item.sizeText,
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = c.text,
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                )
-            }
-            item.seeders?.let { seeders ->
-                Text(
-                    text = "↑ $seeders",
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = if (seeders > 0) c.ok else c.muted,
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                )
-            }
-            if (item.dateText.isNotBlank()) {
-                Text(
-                    text = item.dateText,
-                    fontSize = 12.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = c.muted,
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = item.infoHash?.take(8)?.uppercase()?.let { "#$it" }.orEmpty(),
-                fontSize = 11.sp,
-                fontFamily = FontFamily.Monospace,
-                color = c.muted,
-            )
-
-            if (isResolving) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
-                    color = c.accent,
-                )
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(
-                        onClick = onCopyClick,
-                        shape = RoundedCornerShape(5.dp),
-                        color = c.chip,
-                        border = BorderStroke(1.dp, c.hairline),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .height(30.dp)
-                                .padding(horizontal = 10.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "复制",
-                                fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace,
-                                color = c.text,
-                            )
-                        }
-                    }
-                    Surface(
-                        onClick = onDownloadClick,
-                        shape = RoundedCornerShape(5.dp),
-                        color = c.chip,
-                        border = BorderStroke(1.dp, c.hairline),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .height(30.dp)
-                                .padding(horizontal = 10.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = "下载 ↗",
-                                fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace,
-                                color = c.text,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SiteExecutionRow(
-    siteState: SiteExecutionState,
-    onVerifyCf: (String) -> Unit,
-) {
-    val c = InstrumentTheme.colors
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = siteState.site.name,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = c.text,
-            )
-            val (statusText, statusColor) = when (val st = siteState.status) {
-                SiteSearchStatus.Pending -> "排队中..." to c.muted
-                SiteSearchStatus.Running -> "请求中..." to c.muted
-                is SiteSearchStatus.Success -> "● 命中 ${st.count} 条 · ${st.latencyMs}ms" to c.ok
-                is SiteSearchStatus.ChallengeRequired -> "◆ 需过盾 · ${st.latencyMs}ms" to c.warn
-                is SiteSearchStatus.Failed -> "× ${st.reason} · ${st.latencyMs}ms" to c.muted
-            }
-            Text(
-                text = statusText,
-                fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace,
-                color = statusColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (siteState.status is SiteSearchStatus.ChallengeRequired) {
-            Surface(
-                onClick = { onVerifyCf(siteState.status.challengeUrl) },
-                shape = RoundedCornerShape(5.dp),
-                color = c.warn.copy(alpha = 0.14f),
-                border = BorderStroke(1.dp, c.warn),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .height(30.dp)
-                        .padding(horizontal = 10.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "过盾",
-                        fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.SemiBold,
-                        color = c.warn,
-                    )
-                }
-            }
-        }
-    }
-}
-
-private fun SortOption.shortLabel(): String = when (this) {
-    SortOption.RELEVANCE -> "综合"
-    SortOption.SEEDERS_DESC -> "做种"
-    SortOption.SIZE_DESC -> "体积↓"
-    SortOption.SIZE_ASC -> "体积↑"
-    SortOption.DATE_DESC -> "最新"
-    SortOption.SOURCES_DESC -> "多站"
 }
 
 private fun copyText(context: Context, text: String) {

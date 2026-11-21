@@ -13,7 +13,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class SiteRuleRepository(
-    private val context: Context,
+    private val context: Context?,
     private val dao: SiteRuleDao,
 ) {
     private val json = Json {
@@ -30,7 +30,8 @@ class SiteRuleRepository(
     }
 
     private fun loadBundledDtos(): List<SiteRuleDto> {
-        val rawJson = context.assets.open("sites_default.json")
+        val ctx = requireNotNull(context) { "Context is required to load bundled assets" }
+        val rawJson = ctx.assets.open("sites_default.json")
             .bufferedReader()
             .use { it.readText() }
         return json.decodeFromString<List<SiteRuleDto>>(rawJson)
@@ -92,11 +93,18 @@ class SiteRuleRepository(
     /**
      * Imports rules from a JSON string (`site-1.0.0.json` array or single object),
      * merging by site `id` and returning the imported count.
+     *
+     * When [replaceAll] is false and [deactivateMissingPublicSites] is true, any existing
+     * subscription-managed public rule (`id < CUSTOM_RULE_MIN_ID` and non-self-hosted API)
+     * that is absent from the imported payload is automatically set to `enabled = false`
+     * while preserving its local record, user custom rules (`id >= 20000`), and
+     * self-hosted `PROWLARR` / `TORZNAB` sources.
      */
     suspend fun importFromJson(
         rawJson: String,
         replaceAll: Boolean = false,
         preserveApiSources: Boolean = true,
+        deactivateMissingPublicSites: Boolean = false,
     ): Int = withContext(Dispatchers.IO) {
         val trimmed = rawJson.trim()
         val dtos = if (trimmed.startsWith("[")) {
@@ -108,15 +116,41 @@ class SiteRuleRepository(
         val safeDtos = filterDtosForSafeImport(dtos, protectedIds, preserveApiSources)
         if (replaceAll) {
             if (preserveApiSources) dao.deleteNonApiRules() else dao.deleteAll()
+            val existingMaxOrder = if (preserveApiSources) {
+                dao.getAll().maxOfOrNull { it.sortOrder } ?: -1
+            } else {
+                -1
+            }
+            val entities = safeDtos.mapIndexed { index, dto ->
+                SiteRuleEntity.fromDomain(
+                    SiteRule.fromDto(dto, sortOrder = existingMaxOrder + 1 + index),
+                    json,
+                )
+            }
+            dao.upsertAll(entities)
+            return@withContext entities.size
         }
-        val existingCount = if (replaceAll && !preserveApiSources) 0 else dao.count()
-        val entities = safeDtos.mapIndexed { index, dto ->
+
+        val existingRules = dao.getAll()
+        val existingById = existingRules.associateBy { it.id }
+        var nextSortOrder = (existingRules.maxOfOrNull { it.sortOrder } ?: -1) + 1
+        val entities = safeDtos.map { dto ->
+            val existing = existingById[dto.id]
+            val sortOrder = existing?.sortOrder ?: (nextSortOrder++)
             SiteRuleEntity.fromDomain(
-                SiteRule.fromDto(dto, sortOrder = existingCount + index),
+                SiteRule.fromDto(dto, sortOrder = sortOrder),
                 json,
             )
         }
         dao.upsertAll(entities)
+
+        if (deactivateMissingPublicSites && safeDtos.isNotEmpty()) {
+            val importedIds = safeDtos.map { it.id }.toSet()
+            val stalePublicIds = findStalePublicSiteIds(existingRules, importedIds)
+            if (stalePublicIds.isNotEmpty()) {
+                dao.disableByIds(stalePublicIds)
+            }
+        }
         entities.size
     }
 
@@ -138,8 +172,8 @@ class SiteRuleRepository(
     }
 
     suspend fun nextCustomRuleId(): Long = withContext(Dispatchers.IO) {
-        val maxId = dao.getAll().maxOfOrNull { it.id } ?: 20000L
-        maxOf(20001L, maxId + 1L)
+        val maxId = dao.getAll().maxOfOrNull { it.id } ?: CUSTOM_RULE_MIN_ID
+        maxOf(CUSTOM_RULE_MIN_ID + 1L, maxId + 1L)
     }
 
     suspend fun nextSortOrder(): Int = withContext(Dispatchers.IO) {
@@ -168,6 +202,23 @@ class SiteRuleRepository(
 
     companion object {
         const val BUILTIN_PUBLIC_MIN_ID = 10100L
+        const val CUSTOM_RULE_MIN_ID = 20000L
+
+        fun isManagedPublicRule(entity: SiteRuleEntity): Boolean {
+            return entity.id < CUSTOM_RULE_MIN_ID &&
+                !SiteSourceType.fromRaw(entity.sourceType).isSelfHostedApi
+        }
+
+        fun findStalePublicSiteIds(
+            existingRules: List<SiteRuleEntity>,
+            importedIds: Set<Long>,
+        ): List<Long> {
+            return existingRules
+                .filter { entity ->
+                    isManagedPublicRule(entity) && entity.id !in importedIds
+                }
+                .map { it.id }
+        }
 
         fun filterDtosForSafeImport(
             incoming: List<SiteRuleDto>,

@@ -1,10 +1,81 @@
 {
-  "_comment": "配置需要自动从发布页抓取最新域名的站点。将对应规则的 id 与发布页 URL、域名正则填入 entries 数组即可。",
+  "_comment": "配置需要自动从发布页抓取最新域名的站点。apply_domain_sources 会在每个发布页中按 domainRegex 提取最新可用域名；若发布页不可达或未匹配，将自动保留原规则域名并记录日志。",
   "_example": {
     "id": 10001,
     "name": "SOBT",
     "publishUrl": "https://example-publish.org/",
     "domainRegex": "https?://sobt[0-9]+\\.top"
   },
-  "entries": []
+  "entries": [
+    {
+      "id": 10001,
+      "name": "SOBT",
+      "publishUrl": "https://sobt.top/",
+      "publishUrls": [
+        "https://sobt.top/",
+        "https://sobt22.top/"
+      ],
+      "domainRegex": "https?://sobt[0-9]+\\.(?:top|cc|xyz|org)"
+    },
+    {
+      "id": 10017,
+      "name": "吴签磁力",
+      "publishUrl": "https://wuqian.top/",
+      "publishUrls": [
+        "https://wuqian.top/",
+        "https://wuqianwo.cc/"
+      ],
+      "domainRegex": "https?://wuqian[a-z0-9]*\\.(?:cc|top|com|xyz)"
+    },
+    {
+      "id": 10019,
+      "name": "磁力爬",
+      "publishUrl": "https://cilipa.top/",
+      "publishUrls": [
+        "https://cilipa.top/",
+        "https://clp138.shop/"
+      ],
+      "domainRegex": "https?://clp[0-9]+\\.(?:shop|top|xyz|cc)"
+    },
+    {
+      "id": 10026,
+      "name": "海盗船",
+      "publishUrl": "https://piratebayproxy.info/",
+      "publishUrls": [
+        "https://piratebayproxy.info/",
+        "https://thepiratebay10.xyz/"
+      ],
+      "domainRegex": "https?://thepiratebay[0-9]+\\.(?:org|xyz|top|party)"
+    },
+    {
+      "id": 10029,
+      "name": "SKrBT",
+      "publishUrl": "https://skrbt.top/",
+      "publishUrls": [
+        "https://skrbt.top/",
+        "https://skrbttv.top/"
+      ],
+      "domainRegex": "https?://skrbt[a-z0-9]*\\.(?:top|cc|xyz|icu)"
+    },
+    {
+      "id": 10030,
+      "name": "SoKitty",
+      "publishUrl": "https://sokitty.me/",
+      "publishUrls": [
+        "https://sokitty.me/",
+        "https://w1.sokitty.me/"
+      ],
+      "domainRegex": "https?://w[0-9]+\\.sokitty\\.(?:me|top|cc)"
+    },
+    {
+      "id": 10036,
+      "name": "BTSOW",
+      "publishUrl": "https://btsow.top/",
+      "publishUrls": [
+        "https://btsow.top/",
+        "https://so2.btsow.top/"
+      ],
+      "domainRegex": "https?://so[0-9]*\\.btsow\\.(?:top|cyou|rest|motorcycles)"
+    }
+  ]
 }

@@ -4,11 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.lanhan.cilicili.AppContainer
+import com.lanhan.cilicili.BuildConfig
 import com.lanhan.cilicili.data.local.AppSettings
 import com.lanhan.cilicili.domain.model.DefaultResultAction
 import com.lanhan.cilicili.domain.model.DohProvider
 import com.lanhan.cilicili.domain.model.ThemeMode
+import com.lanhan.cilicili.domain.update.AppUpdateChecker
+import com.lanhan.cilicili.domain.update.ReleaseInfo
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -20,22 +24,34 @@ data class SettingsUiState(
     val settings: AppSettings = AppSettings(),
     val verifiedCfHostCount: Int = 0,
     val historyCount: Int = 0,
+    val isCheckingUpdate: Boolean = false,
+    val latestRelease: ReleaseInfo? = null,
 )
 
-class SettingsViewModel(private val container: AppContainer) : ViewModel() {
+class SettingsViewModel(
+    private val container: AppContainer,
+    private val updateChecker: AppUpdateChecker = AppUpdateChecker(container.fetcher),
+) : ViewModel() {
 
     private val _messages = Channel<String>(Channel.BUFFERED)
     val messages = _messages.receiveAsFlow()
+
+    private val _isCheckingUpdate = MutableStateFlow(false)
+    private val _latestRelease = MutableStateFlow<ReleaseInfo?>(null)
 
     val uiState: StateFlow<SettingsUiState> = combine(
         container.settingsRepository.settingsFlow,
         container.sessionStore.verifiedHostsFlow,
         container.searchHistoryDao.observeRecent(),
-    ) { settings, hosts, history ->
+        _isCheckingUpdate,
+        _latestRelease,
+    ) { settings, hosts, history, isCheckingUpdate, latestRelease ->
         SettingsUiState(
             settings = settings,
             verifiedCfHostCount = hosts.size,
             historyCount = history.size,
+            isCheckingUpdate = isCheckingUpdate,
+            latestRelease = latestRelease,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -77,6 +93,33 @@ class SettingsViewModel(private val container: AppContainer) : ViewModel() {
             container.searchHistoryDao.clearAll()
             _messages.send("已清空本地搜索历史")
         }
+    }
+
+    fun checkForUpdate() {
+        if (_isCheckingUpdate.value) return
+        viewModelScope.launch {
+            _isCheckingUpdate.value = true
+            try {
+                val currentVersion = BuildConfig.VERSION_NAME
+                updateChecker.checkForUpdate(currentVersion)
+                    .onSuccess { release ->
+                        if (release.hasUpdate) {
+                            _latestRelease.value = release
+                        } else {
+                            _messages.send("当前已是最新版本 (v$currentVersion)")
+                        }
+                    }
+                    .onFailure { err ->
+                        _messages.send("检查更新失败: ${err.message ?: "网络异常"}")
+                    }
+            } finally {
+                _isCheckingUpdate.value = false
+            }
+        }
+    }
+
+    fun dismissUpdateDialog() {
+        _latestRelease.value = null
     }
 
     class Factory(private val container: AppContainer) : ViewModelProvider.Factory {

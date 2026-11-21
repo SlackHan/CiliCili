@@ -1,7 +1,12 @@
 package com.lanhan.cilicili.ui.settings
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +15,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,16 +32,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lanhan.cilicili.BuildConfig
 import com.lanhan.cilicili.domain.model.DefaultResultAction
 import com.lanhan.cilicili.domain.model.DohProvider
 import com.lanhan.cilicili.domain.model.ThemeMode
+import com.lanhan.cilicili.domain.update.ReleaseInfo
 import com.lanhan.cilicili.ui.components.InstrumentHairline
 import com.lanhan.cilicili.ui.components.InstrumentSegmentedControl
 import com.lanhan.cilicili.ui.components.InstrumentSwitch
@@ -51,6 +61,7 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = uiState.settings
     val c = InstrumentTheme.colors
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.messages.collect { msg ->
@@ -413,21 +424,338 @@ fun SettingsScreen(
                 }
             }
 
-            // Minimal single-line version footer
-            Box(
+            InstrumentHairline()
+
+            // 05 · Version & Update Nameplate Card
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 18.dp),
-                contentAlignment = Alignment.Center,
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "CiliCili v${BuildConfig.VERSION_NAME}",
+                    text = "05 · 版本与更新",
                     fontSize = 12.sp,
                     fontFamily = FontFamily.Monospace,
                     color = c.muted,
                 )
+
+                Surface(
+                    onClick = viewModel::checkForUpdate,
+                    enabled = !uiState.isCheckingUpdate,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    color = c.panel,
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (uiState.isCheckingUpdate) c.accent.copy(alpha = 0.65f) else c.hairline,
+                    ),
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(7.dp)
+                                        .clip(CircleShape)
+                                        .background(if (uiState.isCheckingUpdate) c.accent else c.ok),
+                                )
+                                Text(
+                                    text = "CiliCili v${BuildConfig.VERSION_NAME}",
+                                    fontSize = 13.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = c.text,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                            Text(
+                                text = if (uiState.isCheckingUpdate) {
+                                    "正在连接 GitHub Releases 通道..."
+                                } else {
+                                    "BUILD #${BuildConfig.VERSION_CODE} · GitHub Releases 更新通道"
+                                },
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = c.muted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+
+                        Surface(
+                            onClick = viewModel::checkForUpdate,
+                            enabled = !uiState.isCheckingUpdate,
+                            shape = RoundedCornerShape(6.dp),
+                            color = if (uiState.isCheckingUpdate) c.accent.copy(alpha = 0.12f) else c.chip,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (uiState.isCheckingUpdate) c.accent else c.hairline,
+                            ),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .padding(horizontal = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Crossfade(
+                                    targetState = uiState.isCheckingUpdate,
+                                    animationSpec = tween(140),
+                                    label = "checkUpdateCrossfade",
+                                ) { checking ->
+                                    if (checking) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(11.dp),
+                                                strokeWidth = 1.6.dp,
+                                                color = c.accent,
+                                            )
+                                            Text(
+                                                text = "检查中",
+                                                fontSize = 12.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = c.accent,
+                                                maxLines = 1,
+                                            )
+                                        }
+                                    } else {
+                                        Text(
+                                            text = "检查更新",
+                                            fontSize = 12.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Medium,
+                                            color = c.text,
+                                            maxLines = 1,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+
+    uiState.latestRelease?.let { release ->
+        ReleaseUpdateDialog(
+            release = release,
+            onDismiss = viewModel::dismissUpdateDialog,
+            onDownload = { targetRelease ->
+                runCatching {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetRelease.downloadUrl)).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                }
+                viewModel.dismissUpdateDialog()
+            },
+        )
+    }
+}
+
+@Composable
+private fun ReleaseUpdateDialog(
+    release: ReleaseInfo,
+    onDismiss: () -> Unit,
+    onDownload: (ReleaseInfo) -> Unit,
+) {
+    val c = InstrumentTheme.colors
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(10.dp),
+            color = c.panel,
+            border = BorderStroke(1.dp, c.hairline),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Header Section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(c.accent),
+                            )
+                            Text(
+                                text = "发现新版本",
+                                fontSize = 14.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = c.text,
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(c.accent.copy(alpha = 0.14f))
+                                .border(1.dp, c.accent, RoundedCornerShape(4.dp))
+                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = "v${release.versionName}",
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = c.accent,
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = buildString {
+                            append("当前 v${BuildConfig.VERSION_NAME} → 最新 ${release.tagName}")
+                            if (release.publishedAt.length >= 10) {
+                                append(" · ${release.publishedAt.take(10)}")
+                            }
+                        },
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = c.muted,
+                    )
+
+                    if (release.title.isNotBlank() && release.title != release.tagName) {
+                        Text(
+                            text = release.title,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = c.text,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+
+                InstrumentHairline()
+
+                // Changelog Scroll Area
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = "CHANGELOG · 变更日志",
+                        fontSize = 11.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = c.muted,
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 84.dp, max = 240.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(c.bg)
+                            .border(1.dp, c.hairline, RoundedCornerShape(6.dp))
+                            .verticalScroll(rememberScrollState())
+                            .padding(12.dp),
+                    ) {
+                        Text(
+                            text = release.changelog,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = c.text,
+                            lineHeight = 18.sp,
+                        )
+                    }
+                }
+
+                InstrumentHairline()
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Surface(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(6.dp),
+                        color = c.chip,
+                        border = BorderStroke(1.dp, c.hairline),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .height(38.dp)
+                                .padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "稍后",
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Medium,
+                                color = c.text,
+                            )
+                        }
+                    }
+
+                    Surface(
+                        onClick = { onDownload(release) },
+                        modifier = Modifier.weight(1.4f),
+                        shape = RoundedCornerShape(6.dp),
+                        color = c.accent,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .height(38.dp)
+                                .padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "前往下载 APK",
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = c.onAccent,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

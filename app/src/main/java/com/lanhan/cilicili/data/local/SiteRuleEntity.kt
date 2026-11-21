@@ -123,6 +123,9 @@ interface SiteRuleDao {
     @Query("UPDATE site_rules SET enabled = :enabled WHERE id = :id")
     suspend fun setEnabled(id: Long, enabled: Boolean)
 
+    @Query("UPDATE site_rules SET enabled = 0 WHERE id IN (:ids)")
+    suspend fun disableByIds(ids: List<Long>)
+
     @Query(
         "UPDATE site_rules SET healthStatus = :status, lastLatencyMs = :latencyMs, " +
             "lastCheckedAt = :checkedAt, lastErrorMessage = :errorMessage WHERE id = :id",

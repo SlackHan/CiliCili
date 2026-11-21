@@ -31,17 +31,177 @@ DEFAULT_USER_AGENT = (
 PROWLARR_RAW_BASE = (
     "https://raw.githubusercontent.com/Prowlarr/Indexers/master/definitions/v11"
 )
+PROWLARR_DEFINITIONS_ROOT = (
+    "https://raw.githubusercontent.com/Prowlarr/Indexers/master/definitions"
+)
+PROWLARR_DEFINITION_VERSIONS: tuple[str, ...] = ("v11", "v12", "v10", "v9")
 CURATED_PROWLARR_INDEXERS = [
-    "bt4g",
     "uindex",
-    "knaben",
+    "nyaasi",
+    "tokyotosho",
+    "dmhy",
+    "eztv",
     "limetorrents",
-    "torlock",
-    "solidtorrents",
-    "bitsearch",
+    "thepiratebay",
+    "1337x",
+    "acgrip",
+    "0magnet",
+    "magnetcat",
 ]
 
 ZERO_INFO_HASH = "0" * 40
+
+
+def _strip_yaml_comment(line: str) -> str:
+    in_single = False
+    in_double = False
+    escaped = False
+    for i, ch in enumerate(line):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\" and in_double:
+            escaped = True
+            continue
+        if ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == '"' and not in_single:
+            in_double = not in_double
+        elif ch == "#" and not in_single and not in_double:
+            if i == 0 or line[i - 1].isspace():
+                return line[:i].rstrip()
+    return line.rstrip()
+
+
+def _find_unquoted_colon(text: str) -> int:
+    in_single = False
+    in_double = False
+    escaped = False
+    for i, ch in enumerate(text):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\" and in_double:
+            escaped = True
+            continue
+        if ch == "'" and not in_double:
+            in_single = not in_single
+        elif ch == '"' and not in_single:
+            in_double = not in_double
+        elif ch == ":" and not in_single and not in_double:
+            if i + 1 == len(text) or text[i + 1].isspace():
+                return i
+    return -1
+
+
+def _parse_yaml_scalar(val: str) -> Any:
+    val = val.strip()
+    if not val:
+        return ""
+    if (val.startswith('"') and val.endswith('"')) or (
+        val.startswith("'") and val.endswith("'")
+    ):
+        inner = val[1:-1]
+        if val.startswith('"'):
+            inner = inner.replace('\\"', '"').replace("\\\\", "\\")
+        return inner
+    low = val.lower()
+    if low == "true":
+        return True
+    if low == "false":
+        return False
+    if low in ("null", "~"):
+        return None
+    if val.isdigit() or (val.startswith("-") and val[1:].isdigit()):
+        return int(val)
+    return val
+
+
+def _parse_yaml_block(
+    lines: list[tuple[int, str]],
+    idx: int,
+    min_indent: int,
+) -> tuple[Any, int]:
+    if idx >= len(lines) or lines[idx][0] < min_indent:
+        return None, idx
+    base_indent, first_text = lines[idx]
+    if first_text == "-" or first_text.startswith("- "):
+        arr: list[Any] = []
+        while (
+            idx < len(lines)
+            and lines[idx][0] == base_indent
+            and (lines[idx][1] == "-" or lines[idx][1].startswith("- "))
+        ):
+            item_text = lines[idx][1][1:].strip()
+            idx += 1
+            if not item_text:
+                val, idx = _parse_yaml_block(lines, idx, base_indent + 1)
+                arr.append(val)
+            elif (
+                not item_text.startswith("{")
+                and not item_text.startswith("[")
+                and _find_unquoted_colon(item_text) != -1
+            ):
+                sub_lines: list[tuple[int, str]] = [(base_indent + 2, item_text)]
+                while idx < len(lines) and lines[idx][0] > base_indent:
+                    sub_lines.append(lines[idx])
+                    idx += 1
+                val, _ = _parse_yaml_block(sub_lines, 0, base_indent + 2)
+                arr.append(val)
+            else:
+                arr.append(_parse_yaml_scalar(item_text))
+                while idx < len(lines) and lines[idx][0] > base_indent:
+                    idx += 1
+        return arr, idx
+
+    mapping: dict[str, Any] = {}
+    while idx < len(lines) and lines[idx][0] >= base_indent:
+        cur_indent, text = lines[idx]
+        if cur_indent > base_indent:
+            idx += 1
+            continue
+        if text == "-" or text.startswith("- "):
+            break
+        colon = _find_unquoted_colon(text)
+        if colon == -1:
+            idx += 1
+            continue
+        key = str(_parse_yaml_scalar(text[:colon]))
+        val_part = text[colon + 1 :].strip()
+        idx += 1
+        if val_part:
+            mapping[key] = _parse_yaml_scalar(val_part)
+        else:
+            if idx < len(lines) and (
+                lines[idx][0] > cur_indent
+                or (
+                    lines[idx][0] == cur_indent
+                    and (lines[idx][1] == "-" or lines[idx][1].startswith("- "))
+                )
+            ):
+                child_indent = lines[idx][0]
+                val, idx = _parse_yaml_block(lines, idx, child_indent)
+                mapping[key] = val
+            else:
+                mapping[key] = None
+    return mapping, idx
+
+
+def load_yaml(yaml_text: str) -> Any:
+    """Loads YAML using PyYAML if available, falling back to the built-in Cardigann YAML parser."""
+    if yaml is not None:
+        return yaml.safe_load(yaml_text)
+    prepared: list[tuple[int, str]] = []
+    for raw in yaml_text.splitlines():
+        cleaned = _strip_yaml_comment(raw)
+        if not cleaned.strip():
+            continue
+        indent = len(cleaned) - len(cleaned.lstrip(" "))
+        prepared.append((indent, cleaned.strip()))
+    if not prepared:
+        return None
+    res, _ = _parse_yaml_block(prepared, 0, prepared[0][0])
+    return res
 
 
 def utc_now_str() -> str:
@@ -116,95 +276,215 @@ def apply_domain_sources(
     timeout: int = 12,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     logs: list[str] = []
+    out = [copy.deepcopy(r) for r in rules]
     if not domain_sources_path.exists():
-        return rules, logs
+        return out, logs
 
-    raw_cfg = json.loads(domain_sources_path.read_text(encoding="utf-8"))
+    try:
+        raw_cfg = json.loads(domain_sources_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logs.append(f"域名发现配置解析失败: {exc}")
+        return out, logs
+
     entries = raw_cfg.get("entries", []) if isinstance(raw_cfg, dict) else raw_cfg
     if not isinstance(entries, list) or not entries:
-        return rules, logs
+        return out, logs
 
-    rules_by_id = {r["id"]: i for i, r in enumerate(rules) if "id" in r}
-    out = list(rules)
+    rules_by_id = {r["id"]: i for i, r in enumerate(out) if "id" in r}
 
     for entry in entries:
-        if not isinstance(entry, dict):
+        if not isinstance(entry, dict) or entry.get("enabled") is False:
             continue
         rule_id = entry.get("id")
-        publish_url = (entry.get("publishUrl") or "").strip()
         pattern = (entry.get("domainRegex") or "").strip()
-        if rule_id not in rules_by_id or not publish_url or not pattern:
+        candidate_urls: list[str] = []
+        primary_url = (entry.get("publishUrl") or "").strip()
+        if primary_url:
+            candidate_urls.append(primary_url)
+        extra_urls = entry.get("publishUrls")
+        if isinstance(extra_urls, list):
+            for u in extra_urls:
+                u_str = str(u or "").strip()
+                if u_str and u_str not in candidate_urls:
+                    candidate_urls.append(u_str)
+
+        if rule_id not in rules_by_id or not candidate_urls or not pattern:
             continue
 
-        try:
-            status, _, body = http_get_text(publish_url, timeout=timeout)
-            if status != 200:
-                logs.append(f"域名发现失败 [{entry.get('name', rule_id)}]: HTTP {status}")
-                continue
-            match = re.search(pattern, body, flags=re.IGNORECASE)
-            if not match:
-                logs.append(f"域名发现未匹配 [{entry.get('name', rule_id)}]")
-                continue
-            found_url = match.group(0)
-            idx = rules_by_id[rule_id]
-            out[idx] = replace_rule_origin(out[idx], found_url)
-            out[idx]["updateTime"] = utc_now_str()
-            logs.append(f"域名已更新 [{out[idx]['name']}]: {found_url}")
-        except Exception as exc:  # pragma: no cover - network fallback
-            logs.append(f"域名发现异常 [{entry.get('name', rule_id)}]: {exc}")
+        entry_name = entry.get("name", rule_id)
+        updated_domain = False
+        last_failure_kind = "unmatched"
+        last_failure_detail = ""
+
+        for publish_url in candidate_urls:
+            try:
+                status, _, body = http_get_text(publish_url, timeout=timeout)
+                if status != 200:
+                    last_failure_kind = "http"
+                    last_failure_detail = f"HTTP {status}"
+                    continue
+                match = re.search(pattern, body, flags=re.IGNORECASE)
+                if not match:
+                    last_failure_kind = "unmatched"
+                    continue
+                found_url = match.group(0).strip().rstrip("/")
+                parsed_found = urllib.parse.urlparse(found_url)
+                if not parsed_found.scheme or not parsed_found.netloc:
+                    last_failure_kind = "unmatched"
+                    continue
+                idx = rules_by_id[rule_id]
+                out[idx] = replace_rule_origin(out[idx], found_url)
+                out[idx]["updateTime"] = utc_now_str()
+                logs.append(f"域名已更新 [{out[idx]['name']}]: {found_url}")
+                updated_domain = True
+                break
+            except Exception as exc:  # pragma: no cover - network fallback
+                last_failure_kind = "error"
+                last_failure_detail = str(exc)
+
+        if not updated_domain:
+            if last_failure_kind == "http":
+                logs.append(f"域名发现失败 [{entry_name}]: {last_failure_detail}")
+            elif last_failure_kind == "error":
+                logs.append(f"域名发现异常 [{entry_name}]: {last_failure_detail}")
+            else:
+                logs.append(f"域名发现未匹配 [{entry_name}]")
 
     return out, logs
 
 
-def _field_to_css(field_spec: Any) -> str:
+def _extract_config_defaults(data: dict[str, Any]) -> dict[str, str]:
+    defaults: dict[str, str] = {}
+    settings = data.get("settings")
+    if not isinstance(settings, list):
+        return defaults
+    for item in settings:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "").strip()
+        if not name:
+            continue
+        default_val = item.get("default")
+        defaults[name] = "" if default_val is None else str(default_val).strip()
+    return defaults
+
+
+def _eval_cardigann_condition(cond: str, config_defaults: dict[str, str]) -> bool:
+    cond_str = cond.strip()
+    config_refs = re.findall(r"\.Config\.([a-zA-Z0-9_-]+)", cond_str)
+    has_keywords = ".Keywords" in cond_str or ".Query.Keywords" in cond_str
+    if config_refs:
+        return not has_keywords and any(
+            bool(config_defaults.get(k, "").strip())
+            and config_defaults.get(k, "").strip().lower() not in ("false", "0")
+            for k in config_refs
+        )
+    return has_keywords
+
+
+def _expand_cardigann_template(
+    template: str,
+    config_defaults: dict[str, str] | None = None,
+) -> str:
+    if not template:
+        return ""
+    cfg = config_defaults or {}
+    expanded = template.strip()
+
+    # Replace simple value placeholders first so conditional branches become plain text
+    expanded = re.sub(
+        r"\{\{\s*(?:\.Query\.Keywords|\.Keywords)\s*\}\}",
+        "[keyword]",
+        expanded,
+    )
+    expanded = re.sub(
+        r"\{\{\s*(?:\.Query\.Page|\.Page)\s*\}\}",
+        "[page]",
+        expanded,
+    )
+    expanded = re.sub(
+        r"\{\{\s*\.Config\.([a-zA-Z0-9_-]+)\s*\}\}",
+        lambda m: cfg.get(m.group(1), ""),
+        expanded,
+    )
+    expanded = re.sub(
+        r"\{\{\s*join\s+\.Categories\s+[^}]*\}\}",
+        "0",
+        expanded,
+    )
+    expanded = re.sub(
+        r"\{\{\s*\.Today\.Year\s*\}\}",
+        str(dt.datetime.now(dt.timezone.utc).year),
+        expanded,
+    )
+
+    if_pattern = re.compile(
+        r"\{\{\s*if\s+([^{}]+?)\s*\}\}([^{}]*?)(?:\{\{\s*else\s*\}\}([^{}]*?))?\{\{\s*end\s*\}\}"
+    )
+    for _ in range(6):
+        if not if_pattern.search(expanded):
+            break
+        expanded = if_pattern.sub(
+            lambda m: (m.group(2) or "")
+            if _eval_cardigann_condition(m.group(1), cfg)
+            else (m.group(3) or ""),
+            expanded,
+        )
+
+    return expanded.strip()
+
+
+def _field_to_css(
+    field_spec: Any,
+    config_defaults: dict[str, str] | None = None,
+    raw_selector: bool = False,
+) -> str:
+    prefix = "" if raw_selector else "css:"
     if isinstance(field_spec, str):
-        sel = field_spec.strip()
-        return f"css:{sel}" if sel else ""
+        sel = _expand_cardigann_template(field_spec, config_defaults)
+        if not sel or "{{" in sel or "}}" in sel:
+            return ""
+        return f"{prefix}{sel}"
     if not isinstance(field_spec, dict):
         return ""
-    sel = (field_spec.get("selector") or "").strip()
-    if not sel:
+    sel = _expand_cardigann_template(
+        str(field_spec.get("selector") or ""),
+        config_defaults,
+    )
+    if not sel or "{{" in sel or "}}" in sel:
         return ""
-    attr = (field_spec.get("attribute") or "").strip()
+    if raw_selector:
+        return sel
+    attr = str(field_spec.get("attribute") or "").strip()
     # Skip non-standard pseudo attributes handled only by Cardigann filters
     if attr and re.fullmatch(r"[a-zA-Z0-9_-]+", attr):
         return f"css:{sel}@{attr}"
     return f"css:{sel}"
 
 
-def _convert_cardigann_path(path_template: str, inputs: dict[str, Any] | None) -> str | None:
+def _convert_cardigann_path(
+    path_template: str,
+    inputs: dict[str, Any] | None,
+    config_defaults: dict[str, str] | None = None,
+) -> str | None:
     if not path_template:
         return None
-    converted = path_template.strip()
-    # Replace common Cardigann keyword/page placeholders
-    converted = re.sub(
-        r"\{\{\s*(?:\.Query\.Keywords|\.Keywords)\s*\}\}",
-        "[keyword]",
-        converted,
-    )
-    converted = re.sub(
-        r"\{\{\s*(?:\.Query\.Page|\.Page)\s*\}\}",
-        "[page]",
-        converted,
-    )
-    # Strip benign {{ if .Keywords }}...{{ end }} wrappers if keyword already replaced
-    if "[keyword]" not in converted and inputs:
-        # Try constructing query string from simple inputs mapping
-        params = []
+    converted = _expand_cardigann_template(path_template, config_defaults)
+    if not converted:
+        return None
+
+    if inputs:
+        params: list[str] = []
         for key, val in inputs.items():
-            if isinstance(val, str):
-                v = re.sub(
-                    r"\{\{\s*(?:\.Query\.Keywords|\.Keywords)\s*\}\}",
-                    "[keyword]",
-                    val.strip(),
-                )
-                v = re.sub(
-                    r"\{\{\s*(?:\.Query\.Page|\.Page)\s*\}\}",
-                    "[page]",
-                    v,
-                )
-                if "{{" not in v and "}}" not in v:
-                    params.append(f"{key}={v}")
+            if val is None or not isinstance(val, (str, int, float)):
+                continue
+            raw_val = str(val).strip()
+            v = _expand_cardigann_template(raw_val, config_defaults)
+            if not v or "{{" in v or "}}" in v:
+                continue
+            if f"{key}=" in converted:
+                continue
+            params.append(f"{key}={v}")
         if params:
             sep = "&" if "?" in converted else "?"
             converted = f"{converted}{sep}{'&'.join(params)}"
@@ -216,11 +496,29 @@ def _convert_cardigann_path(path_template: str, inputs: dict[str, Any] | None) -
     return converted
 
 
+def _extract_top_download_css(
+    data: dict[str, Any],
+    config_defaults: dict[str, str],
+) -> str:
+    top_dl = data.get("download")
+    if not isinstance(top_dl, dict):
+        return ""
+    selectors = top_dl.get("selectors")
+    if not isinstance(selectors, list):
+        return ""
+    for item in selectors:
+        css = _field_to_css(item, config_defaults)
+        if css:
+            return css
+    return ""
+
+
 def convert_cardigann_yaml(yaml_text: str, rule_id: int) -> dict[str, Any] | None:
-    """Converts a simple public GET Cardigann YAML definition into a CiliCili rule dict."""
-    if yaml is None:
+    """Converts a public GET Cardigann YAML definition into a CiliCili rule dict."""
+    try:
+        data = load_yaml(yaml_text)
+    except Exception:
         return None
-    data = yaml.safe_load(yaml_text)
     if not isinstance(data, dict):
         return None
     if str(data.get("type", "")).strip().lower() != "public":
@@ -239,63 +537,156 @@ def convert_cardigann_yaml(yaml_text: str, rule_id: int) -> dict[str, Any] | Non
     if not isinstance(search, dict):
         return None
 
+    config_defaults = _extract_config_defaults(data)
     paths = search.get("paths") or []
-    inputs = search.get("inputs") if isinstance(search.get("inputs"), dict) else None
+    search_inputs = search.get("inputs") if isinstance(search.get("inputs"), dict) else {}
     search_rel: str | None = None
+    is_json_response = False
+
     for entry in paths:
         if not isinstance(entry, dict):
             continue
         method = str(entry.get("method", "get")).strip().lower()
         if method != "get":
             continue
-        candidate = _convert_cardigann_path(str(entry.get("path", "")), inputs)
+        merged_inputs: dict[str, Any] = {}
+        entry_inputs = entry.get("inputs")
+        if isinstance(entry_inputs, dict):
+            merged_inputs.update(entry_inputs)
+        if search_inputs:
+            for k, v in search_inputs.items():
+                merged_inputs.setdefault(k, v)
+
+        candidate = _convert_cardigann_path(
+            str(entry.get("path", "")),
+            merged_inputs or None,
+            config_defaults,
+        )
         if candidate:
             search_rel = candidate
+            resp_cfg = entry.get("response")
+            if (
+                isinstance(resp_cfg, dict)
+                and str(resp_cfg.get("type", "")).strip().lower() == "json"
+            ):
+                is_json_response = True
             break
     if not search_rel:
         return None
 
-    search_url = (
-        search_rel
-        if search_rel.startswith(("http://", "https://"))
-        else f"{main_url}/{search_rel.lstrip('/')}"
-    )
+    if search_rel.startswith(("http://", "https://")):
+        search_url = search_rel
+        parsed_search = urllib.parse.urlparse(search_url)
+        if parsed_search.scheme and parsed_search.netloc:
+            main_url = f"{parsed_search.scheme}://{parsed_search.netloc}"
+    else:
+        search_url = f"{main_url}/{search_rel.lstrip('/')}"
 
     rows = search.get("rows")
     fields = search.get("fields")
     if not isinstance(rows, dict) or not isinstance(fields, dict):
         return None
 
-    group_sel = str(rows.get("selector", "")).strip()
-    if not group_sel:
+    group_sel = _expand_cardigann_template(
+        str(rows.get("selector", "")),
+        config_defaults,
+    )
+    if not group_sel or "{{" in group_sel or "}}" in group_sel:
         return None
-    group_expr = f"css:{group_sel}"
 
-    title_expr = _field_to_css(fields.get("title"))
+    if is_json_response:
+        source_type = "JSON_API"
+        group_expr = "" if group_sel == "$" else group_sel
+    else:
+        source_type = "HTML"
+        group_expr = f"css:{group_sel}"
+
+    title_expr = _field_to_css(
+        fields.get("title"),
+        config_defaults,
+        raw_selector=is_json_response,
+    ) or _field_to_css(
+        fields.get("title_default"),
+        config_defaults,
+        raw_selector=is_json_response,
+    )
     if not title_expr:
         return None
+    if not is_json_response and title_expr.endswith("@href"):
+        title_expr = title_expr[: -len("@href")]
 
-    size_expr = _field_to_css(fields.get("size"))
-    date_expr = _field_to_css(fields.get("date"))
-    magnet_direct = _field_to_css(fields.get("magnet"))
-    details_expr = _field_to_css(fields.get("details"))
-    download_expr = _field_to_css(fields.get("download"))
+    size_expr = _field_to_css(
+        fields.get("size"),
+        config_defaults,
+        raw_selector=is_json_response,
+    )
+    date_expr = (
+        _field_to_css(
+            fields.get("date"),
+            config_defaults,
+            raw_selector=is_json_response,
+        )
+        or _field_to_css(
+            fields.get("date_added"),
+            config_defaults,
+            raw_selector=is_json_response,
+        )
+        or _field_to_css(
+            fields.get("date_default"),
+            config_defaults,
+            raw_selector=is_json_response,
+        )
+    )
+    magnet_direct = _field_to_css(
+        fields.get("magnet"),
+        config_defaults,
+        raw_selector=is_json_response,
+    )
+    details_expr = _field_to_css(
+        fields.get("details"),
+        config_defaults,
+        raw_selector=is_json_response,
+    )
+    download_expr = _field_to_css(
+        fields.get("download"),
+        config_defaults,
+        raw_selector=is_json_response,
+    )
+    infohash_expr = _field_to_css(
+        fields.get("infohash"),
+        config_defaults,
+        raw_selector=is_json_response,
+    )
+    top_download_expr = (
+        "" if is_json_response else _extract_top_download_css(data, config_defaults)
+    )
 
     if magnet_direct:
         url_expr = ""
         magnet_expr = magnet_direct
-    elif details_expr:
+    elif top_download_expr and (details_expr or download_expr):
+        url_expr = details_expr or download_expr
+        magnet_expr = top_download_expr
+    elif download_expr and "magnet" in download_expr.lower():
+        url_expr = ""
+        magnet_expr = download_expr
+    elif details_expr and download_expr:
         url_expr = details_expr
         magnet_expr = download_expr
     elif download_expr:
         url_expr = ""
         magnet_expr = download_expr
+    elif infohash_expr:
+        url_expr = ""
+        magnet_expr = infohash_expr
     else:
         return None
 
     now_str = utc_now_str()
     name = str(data.get("name") or data.get("id") or f"Indexer {rule_id}").strip()
-    info = str(data.get("description") or f"Synced from Prowlarr ({data.get('id', rule_id)})").strip()
+    info = str(
+        data.get("description") or f"Synced from Prowlarr ({data.get('id', rule_id)})"
+    ).strip()
 
     return {
         "id": rule_id,
@@ -304,7 +695,7 @@ def convert_cardigann_yaml(yaml_text: str, rule_id: int) -> dict[str, Any] | Non
         "state": True,
         "time": now_str,
         "updateTime": now_str,
-        "sourceType": "HTML",
+        "sourceType": source_type,
         "request": {
             "method": "GET",
             "mainUrl": main_url,
@@ -325,21 +716,41 @@ def convert_cardigann_yaml(yaml_text: str, rule_id: int) -> dict[str, Any] | Non
     }
 
 
+def fetch_prowlarr_definition(
+    slug: str,
+    versions: tuple[str, ...] | list[str] = PROWLARR_DEFINITION_VERSIONS,
+    timeout: int = 12,
+) -> tuple[int, str, str]:
+    """Fetches a Cardigann YAML definition from Prowlarr/Indexers with version directory fallback."""
+    version_list = list(versions) if versions else ["v11"]
+    last_status = 404
+    last_ver = version_list[0]
+    for ver in version_list:
+        last_ver = ver
+        raw_url = f"{PROWLARR_DEFINITIONS_ROOT}/{ver}/{slug}.yml"
+        status, _, body = http_get_text(raw_url, timeout=timeout)
+        last_status = status
+        if status == 200 and body.strip():
+            return 200, ver, body
+    return last_status, last_ver, ""
+
+
 def sync_prowlarr_public_rules(
     start_id: int = 10201,
     timeout: int = 12,
+    indexers: list[str] | None = None,
+    versions: tuple[str, ...] | list[str] = PROWLARR_DEFINITION_VERSIONS,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     logs: list[str] = []
-    if yaml is None:
-        logs.append("跳过 Prowlarr 上游同步：未安装 PyYAML")
-        return [], logs
-
     converted: list[dict[str, Any]] = []
     next_id = start_id
-    for slug in CURATED_PROWLARR_INDEXERS:
-        raw_url = f"{PROWLARR_RAW_BASE}/{slug}.yml"
+    target_indexers = indexers if indexers is not None else CURATED_PROWLARR_INDEXERS
+
+    for slug in target_indexers:
         try:
-            status, _, body = http_get_text(raw_url, timeout=timeout)
+            status, ver, body = fetch_prowlarr_definition(
+                slug, versions=versions, timeout=timeout
+            )
             if status != 200:
                 logs.append(f"拉取 Prowlarr 规则失败 [{slug}]: HTTP {status}")
                 continue
@@ -348,7 +759,9 @@ def sync_prowlarr_public_rules(
                 logs.append(f"跳过不兼容的 Cardigann 规则 [{slug}]")
                 continue
             converted.append(rule)
-            logs.append(f"已转换 Prowlarr 公开规则 [{slug}] -> #{next_id} {rule['name']}")
+            logs.append(
+                f"已转换 Prowlarr 公开规则 [{slug}@{ver}] -> #{next_id} {rule['name']}"
+            )
             next_id += 1
         except Exception as exc:  # pragma: no cover - network fallback
             logs.append(f"同步 Prowlarr 规则异常 [{slug}]: {exc}")

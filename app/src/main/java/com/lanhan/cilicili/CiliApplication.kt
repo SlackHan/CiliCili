@@ -58,6 +58,7 @@ class AppContainer(application: Application) {
                                 rawJson = text,
                                 replaceAll = false,
                                 preserveApiSources = true,
+                                deactivateMissingPublicSites = true,
                             )
                         }.onSuccess { count ->
                             settingsRepository.recordSubscriptionSync(
