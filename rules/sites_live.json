@@ -1,82 +1,53 @@
 [
   {
-    "id": 10010,
-    "name": "吃力网",
-    "info": "分享提供最全的搜索引擎",
+    "id": 10002,
+    "name": "磁力引擎搜索",
+    "info": "全球资源最丰富的磁力链BT种子搜索下载网站和垂直搜索引擎!",
     "state": true,
-    "time": "2022-01-17 11:26:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "time": "2022-01-15 22:43:00",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
-      "mainUrl": "https://henna.jiukankan.mom",
-      "searchUrl": "https://henna.jiukankan.mom/search/[keyword]/page-[page].html",
+      "mainUrl": "http://eclso.fun",
+      "searchUrl": "http://eclso.fun/soso/[keyword]_rel_[page].html",
       "header": {
-        "Referer": "https://henna.jiukankan.mom/",
+        "Host": "eclso.fun",
+        "Referer": "http://eclso.fun/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
       }
     },
     "expressionModel": {
-      "group": "//div[@id='w0']/article[contains(concat(' ', normalize-space(@class), ' '), ' item ')][.//a[starts-with(@href, '/hash/')]]",
-      "title": ".//a[starts-with(@href, '/hash/')]/h4",
-      "date": "./div/p[1]",
-      "size": "",
-      "url": "",
-      "magnet": ".//a[starts-with(@href, '/hash/')]/@href"
+      "group": "//div[@class='search-item']",
+      "title": ".//div[@class='item-title']//h3/a",
+      "date": ".//div[@class='item-bar']/span[2]/b",
+      "size": ".//div[@class='item-bar']/span[3]/b",
+      "url": ".//div[@class='item-title']//h3/a/@href",
+      "magnet": "//input[@id='m_link']/@value"
     }
   },
   {
-    "id": 10013,
-    "name": "BT目录",
-    "info": "最好的资源聚合搜索引擎",
+    "id": 10007,
+    "name": "ØMagnet",
+    "info": "Made Torrent Sharing  Easy",
     "state": true,
-    "time": "2022-01-17 16:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "time": "2022-01-16 22:19:00",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
-      "mainUrl": "https://www.btmulu.cyou/",
-      "searchUrl": "https://www.btmulu.cyou/search/[keyword]/page-[page].html",
+      "mainUrl": "https://wuji.me/",
+      "searchUrl": "https://wuji.me/search?q=[keyword]&page=[page]",
       "header": {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        "Referer": "https://wuji.me/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
       }
     },
     "expressionModel": {
-      "group": "//div[@style='overflow: hidden;']",
-      "title": ".//a/h4[1]",
-      "date": ".//p",
-      "size": "",
-      "url": "",
-      "magnet": ".//a/@href"
-    }
-  },
-  {
-    "id": 10016,
-    "name": "torrentkitty",
-    "info": "Torrent Kitty - Free Torrent To Magnet Link Conversion Service",
-    "state": true,
-    "time": "2022-07-19 14:56:00",
-    "updateTime": "2026-11-21 12:36:36",
-    "request": {
-      "method": "GET",
-      "mainUrl": "",
-      "searchUrl": "https://www.torrentkitty.ink/search/[keyword]/[page]",
-      "header": {
-        "origin": "https://www.torrentkitty.ink/",
-        "referer": "https://www.torrentkitty.ink/",
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "same-origin",
-        "sec-fetch-user": "?1",
-        "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
-      }
-    },
-    "expressionModel": {
-      "group": "//table[@id='archiveResult']/tbody/tr",
-      "title": ".//td[1]",
-      "date": ".//td[3]",
-      "size": ".//td[2]",
-      "url": "",
-      "magnet": ".//td[4]/a[2]/@href"
+      "group": "//table[contains(concat(' ', normalize-space(@class), ' '), ' file-list ')]/tbody/tr[td/a[@href]]",
+      "title": "./td[1]/a",
+      "date": "",
+      "size": "./td[contains(concat(' ', normalize-space(@class), ' '), ' td-size ')]",
+      "url": "./td[1]/a/@href",
+      "magnet": "//input[@id='input-magnet']/@value"
     }
   },
   {
@@ -85,7 +56,7 @@
     "info": "推荐，干净、好用的磁力链和网盘资源搜索引擎！",
     "state": true,
     "time": "2022-08-27 17:24:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://wuqianwo.cc",
@@ -110,7 +81,7 @@
     "info": "磁力爬搜索",
     "state": true,
     "time": "2022-08-29 10:09:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://clp138.shop/",
@@ -149,7 +120,55 @@
       "url": "",
       "magnet": ".//dt/a/@href"
     },
-    "updateTime": "2026-11-21 12:36:36"
+    "updateTime": "2026-11-22 00:01:03"
+  },
+  {
+    "id": 10024,
+    "name": "动漫花园",
+    "info": "動漫花園資源網 - 動漫愛好者的自由交流平台",
+    "state": true,
+    "time": "2023-01-31 12:00:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://dmhy.anoneko.com/",
+      "searchUrl": "https://dmhy.anoneko.com/topics/list/page/[page]?keyword=[keyword]",
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[@class='tablesorter']/tbody/tr",
+      "title": ".//td[@class='title']/a",
+      "date": ".//dd[@class'info']",
+      "size": "",
+      "url": ".//td[@class='title']/a/@href",
+      "magnet": "//a[@id='magnet2']"
+    },
+    "updateTime": "2026-11-22 00:01:03"
+  },
+  {
+    "id": 10026,
+    "name": "海盗船",
+    "info": "Download music, movies, games, software! The Pirate Bay - The galaxy's most resilient BitTorrent site",
+    "state": true,
+    "time": "2023-01-31 15:09:00",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://thepiratebay0.org",
+      "searchUrl": "https://thepiratebay0.org/search/[keyword]/[page]/99/0",
+      "header": {
+        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.87 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//table[@id='searchResult']//tr",
+      "title": ".//tr/td/a['title']",
+      "date": ".//font[@class='detDesc']",
+      "size": "",
+      "url": "",
+      "magnet": ".//td/a/@href"
+    },
+    "updateTime": "2026-11-22 00:01:03"
   },
   {
     "id": 10027,
@@ -184,7 +203,7 @@
       "url": "",
       "magnet": ".//div[@class='title']/h3/a/@href"
     },
-    "updateTime": "2026-11-21 12:36:36"
+    "updateTime": "2026-11-22 00:01:03"
   },
   {
     "id": 10028,
@@ -219,7 +238,7 @@
       "url": "",
       "magnet": ".//div[@class='title']/h3/a/@href"
     },
-    "updateTime": "2026-11-21 12:36:36"
+    "updateTime": "2026-11-22 00:01:03"
   },
   {
     "id": 10029,
@@ -227,7 +246,7 @@
     "info": "推荐，国内资源非常丰富的磁力搜索引擎！",
     "state": true,
     "time": "2023-08-31 18:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://skrbttv.top",
@@ -252,7 +271,7 @@
     "info": "磁力链接资源搜索",
     "state": true,
     "time": "2023-08-31 18:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://w1.sokitty.me",
@@ -277,7 +296,7 @@
     "info": "BT种子和磁力链接搜索引擎",
     "state": true,
     "time": "2023-08-31 18:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://so.ttbt.top",
@@ -302,7 +321,7 @@
     "info": "BT种子和磁力链接搜索引擎",
     "state": true,
     "time": "2023-08-31 18:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://cdn.btlm.top:65533",
@@ -327,7 +346,7 @@
     "info": "BT种子和磁力链接搜索引擎",
     "state": true,
     "time": "2023-08-31 18:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://cache.foxn.top",
@@ -347,12 +366,37 @@
     }
   },
   {
+    "id": 10035,
+    "name": "磁力搜索",
+    "info": "磁力链接资源搜索引擎",
+    "state": true,
+    "time": "2023-08-31 18:01:00",
+    "updateTime": "2026-11-22 00:01:03",
+    "request": {
+      "method": "GET",
+      "mainUrl": "http://eclso.fun",
+      "searchUrl": "http://eclso.fun/soso/[keyword]_rel_[page].html",
+      "header": {
+        "Referer": "http://eclso.fun/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' search-item ')][./div[@class='item-title']/h3/a]",
+      "title": "./div[@class='item-title']/h3/a",
+      "date": "./div[@class='item-bar']/span[2]/b",
+      "size": "./div[@class='item-bar']/span[3]/b",
+      "url": "./div[@class='item-title']/h3/a/@href",
+      "magnet": "//a[@id='down-url']/@href"
+    }
+  },
+  {
     "id": 10036,
     "name": "BTSOW",
     "info": "BT种子和磁力链接搜索引擎",
     "state": true,
     "time": "2023-08-31 18:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://so2.btsow.top",
@@ -377,7 +421,7 @@
     "info": "磁力星球 BT 种子和磁力链接搜索",
     "state": true,
     "time": "2023-08-31 18:01:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://so.starcs.top",
@@ -397,28 +441,29 @@
     }
   },
   {
-    "id": 10039,
-    "name": "高清族",
-    "info": "高清电影、电视剧磁力资源",
+    "id": 10038,
+    "name": "吃力网分享",
+    "info": "一站式全网磁力多引擎磁力种子搜索功能",
     "state": true,
-    "time": "2026-10-29 00:00:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "time": "2022-01-16 21:03:00",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
-      "mainUrl": "https://hdzu.org",
-      "searchUrl": "https://hdzu.org/movie/filter?act=title&wd=[keyword]&page=[page]",
+      "mainUrl": "http://eclso.fun/",
+      "searchUrl": "http://eclso.fun/soso/[keyword]_rel_[page].html",
       "header": {
-        "Referer": "https://hdzu.org/",
+        "Host": "eclso.fun",
+        "Referer": "http://eclso.fun/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
       }
     },
     "expressionModel": {
-      "group": "//ul[@id='list-topic']/li[contains(concat(' ', normalize-space(@class), ' '), ' topic-item ')]",
-      "title": ".//h2[contains(concat(' ', normalize-space(@class), ' '), ' topic-title ')]/a",
-      "date": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' topic-option ')]",
-      "size": ".//h2[contains(concat(' ', normalize-space(@class), ' '), ' topic-title ')]/span",
-      "url": ".//h2[contains(concat(' ', normalize-space(@class), ' '), ' topic-title ')]/a/@href",
-      "magnet": "//div[contains(concat(' ', normalize-space(@class), ' '), ' movie-url ')]//a[contains(concat(' ', normalize-space(@class), ' '), ' open-url ') and starts-with(@href, 'magnet:')]/@href"
+      "group": "//div[contains(concat(' ', normalize-space(@class), ' '), ' search-item ')]",
+      "title": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-title ')]//h3/a",
+      "date": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-bar ')]/span[2]/b",
+      "size": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-bar ')]/span[3]/b",
+      "url": ".//div[contains(concat(' ', normalize-space(@class), ' '), ' item-title ')]//h3/a/@href",
+      "magnet": "//input[@id='m_link']/@value"
     }
   },
   {
@@ -427,7 +472,7 @@
     "info": "磁力片 - 高效的磁力搜索工具",
     "state": true,
     "time": "2026-10-29 00:00:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "request": {
       "method": "GET",
       "mainUrl": "https://so.btapp.top",
@@ -452,7 +497,7 @@
     "info": "ThePirateBay 官方公开 JSON 接口，无需翻页、免 HTML 解析",
     "state": true,
     "time": "2026-11-21 00:00:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "sourceType": "JSON_API",
     "request": {
       "method": "GET",
@@ -475,7 +520,7 @@
     "info": "Nyaa.si 官方 RSS 订阅源，结构稳定",
     "state": true,
     "time": "2026-11-21 00:00:00",
-    "updateTime": "2026-11-21 12:36:36",
+    "updateTime": "2026-11-22 00:01:03",
     "sourceType": "RSS",
     "request": {
       "method": "GET",
@@ -486,38 +531,28 @@
     "expressionModel": {}
   },
   {
-    "id": 10202,
-    "name": "Nyaa.si",
-    "info": "Nyaa is a Public torrent site focused on Eastern ASIAN media including anime, manga, literature and music",
+    "id": 10103,
+    "name": "动漫花园 RSS",
+    "info": "動漫花園官方 RSS 订阅源，自带磁力与文件大小",
     "state": true,
-    "time": "2026-11-21 12:36:00",
-    "updateTime": "2026-11-21 12:36:36",
-    "sourceType": "HTML",
+    "time": "2026-11-21 00:00:00",
+    "updateTime": "2026-11-22 00:01:03",
+    "sourceType": "RSS",
     "request": {
       "method": "GET",
-      "mainUrl": "https://nyaa.si",
-      "searchUrl": "https://nyaa.si/?q=[keyword]&f=0&c=0_0&s=id&o=desc",
-      "header": {
-        "Referer": "https://nyaa.si/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
-      }
+      "mainUrl": "https://dmhy.anoneko.com",
+      "searchUrl": "https://dmhy.anoneko.com/topics/rss/rss.xml?keyword=[keyword]",
+      "header": {}
     },
-    "expressionModel": {
-      "group": "css:tr.default,tr.danger,tr.success",
-      "title": "css:td:nth-child(2) a:last-of-type",
-      "date": "css:td:nth-child(5)",
-      "size": "css:td:nth-child(4)",
-      "url": "",
-      "magnet": "css:td:nth-child(3) a[href^=\"magnet:?\"]@href"
-    }
+    "expressionModel": {}
   },
   {
     "id": 10204,
     "name": "dmhy",
     "info": "dmhy is a TAIWANESE Public magnet tracker for ANIME",
     "state": true,
-    "time": "2026-11-21 12:36:02",
-    "updateTime": "2026-11-21 12:36:36",
+    "time": "2026-11-22 00:00:48",
+    "updateTime": "2026-11-22 00:01:03",
     "sourceType": "HTML",
     "request": {
       "method": "GET",
@@ -538,38 +573,12 @@
     }
   },
   {
-    "id": 10206,
-    "name": "LimeTorrents",
-    "info": "LimeTorrents is a Public general torrent index with mostly verified torrents",
-    "state": true,
-    "time": "2026-11-21 12:36:04",
-    "updateTime": "2026-11-21 12:36:36",
-    "sourceType": "HTML",
-    "request": {
-      "method": "GET",
-      "mainUrl": "https://www.limetorrents.fun",
-      "searchUrl": "https://www.limetorrents.fun/search/all/[keyword]/date/1/",
-      "header": {
-        "Referer": "https://www.limetorrents.fun/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
-      }
-    },
-    "expressionModel": {
-      "group": "css:.table2 > tbody > tr[bgcolor]",
-      "title": "css:div.tt-name > a[href^=\"/\"]",
-      "date": "css:td:nth-child(2)",
-      "size": "css:td:nth-child(3)",
-      "url": "css:div.tt-name > a[href^=\"/\"]@href",
-      "magnet": "css:a.csprite_dltorrent[href*=\"magnet:\"]@href"
-    }
-  },
-  {
     "id": 10207,
     "name": "The Pirate Bay",
     "info": "The Pirate Bay (TPB) is the galaxy’s most resilient Public BitTorrent site",
     "state": true,
-    "time": "2026-11-21 12:36:06",
-    "updateTime": "2026-11-21 12:36:36",
+    "time": "2026-11-22 00:00:48",
+    "updateTime": "2026-11-22 00:01:03",
     "sourceType": "JSON_API",
     "request": {
       "method": "GET",
@@ -594,8 +603,8 @@
     "name": "ACG.RIP",
     "info": "ACG.RIP is a CHINESE Public torrent tracker for the latest anime and Japanese related torrents",
     "state": true,
-    "time": "2026-11-21 12:36:08",
-    "updateTime": "2026-11-21 12:36:36",
+    "time": "2026-11-22 00:00:48",
+    "updateTime": "2026-11-22 00:01:03",
     "sourceType": "HTML",
     "request": {
       "method": "GET",
@@ -613,6 +622,32 @@
       "size": "css:td.size",
       "url": "css:td.title > span.title a@href",
       "magnet": "css:td.action a@href"
+    }
+  },
+  {
+    "id": 10210,
+    "name": "0Magnet",
+    "info": "ØMagnet is a CHINESE Public tracker for Asian 3X (JAV)",
+    "state": true,
+    "time": "2026-11-22 00:00:48",
+    "updateTime": "2026-11-22 00:01:03",
+    "sourceType": "HTML",
+    "request": {
+      "method": "GET",
+      "mainUrl": "https://16mag.net",
+      "searchUrl": "https://16mag.net/search?q=[keyword]",
+      "header": {
+        "Referer": "https://16mag.net/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+      }
+    },
+    "expressionModel": {
+      "group": "css:table > tbody > tr:has(td):not(:contains(\"We couldn't find anything for\"))",
+      "title": "css:a",
+      "date": "css:div.result-date",
+      "size": "css:td.result-meta > div",
+      "url": "css:a@href",
+      "magnet": "css:a@href"
     }
   }
 ]
