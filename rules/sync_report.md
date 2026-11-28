@@ -1,6 +1,6 @@
 # CiliCili 规则同步与测活报告
 
-- 更新时间 (UTC): `2026-11-27 02:36:08`
+- 更新时间 (UTC): `2026-11-28 02:26:52`
 - 候选总数: `54`
 - 通过测活 / 保留输出: `27` / `27`
 
@@ -29,57 +29,57 @@
 
 | ID | 名称 | 类型 | 状态 | 耗时 | 说明 |
 | --- | --- | --- | --- | --- | --- |
-| 10001 | SOBT | HTML | 剔除 | 594ms | HTTP 404 |
-| 10002 | 磁力引擎搜索 | HTML | 可用 | 381ms | HTTP 200 可达 |
-| 10003 | 磁力宝 | HTML | 剔除 | 75ms | HTTP 403 |
-| 10004 | 磁力猫 | HTML | 剔除 | 1014ms | HTTP 404 |
-| 10005 | 磁力狗 | HTML | 剔除 | 1030ms | HTTP 404 |
-| 10006 | btfox | HTML | 剔除 | 50ms | 网络异常: <urlopen error [Errno -2] Name or service not known> |
-| 10007 | ØMagnet | HTML | 可用 | 587ms | HTTP 200 可达 |
-| 10008 | 种子吧 | HTML | 剔除 | 47ms | 网络异常: <urlopen error [Errno -2] Name or service not known> |
-| 10009 | 1024BT | HTML | 剔除 | 123ms | HTTP 403 Cloudflare 盾 |
-| 10010 | 吃力网 | HTML | 剔除 | 121ms | HTTP 403 Cloudflare 盾 |
-| 10011 | 磁力树 | HTML | 剔除 | 190ms | HTTP 403 Cloudflare 盾 |
-| 10012 | 小草磁力 | HTML | 剔除 | 632ms | HTTP 403 Cloudflare 盾 |
-| 10013 | BT目录 | HTML | 剔除 | 123ms | HTTP 403 Cloudflare 盾 |
-| 10014 | 简单动漫 | HTML | 剔除 | 550ms | HTTP 404 |
-| 10016 | torrentkitty | HTML | 剔除 | 95ms | HTTP 403 Cloudflare 盾 |
-| 10017 | 吴签磁力 | HTML | 可用 | 1445ms | HTTP 200 可达 |
-| 10018 | 种子搜 | HTML | 剔除 | 686ms | HTTP 404 |
-| 10019 | 磁力爬 | HTML | 可用 | 329ms | HTTP 200 可达 |
-| 10020 | BTMirror | HTML | 剔除 | 859ms | HTTP 401 |
-| 10022 | 磁力海 | HTML | 可用 | 464ms | HTTP 200 可达 |
-| 10023 | 飞鱼磁力 | HTML | 剔除 | 509ms | HTTP 403 Cloudflare 盾 |
-| 10024 | 动漫花园 | HTML | 可用 | 600ms | HTTP 200 可达 |
-| 10025 | 磁力天堂 | HTML | 剔除 | 137ms | HTTP 403 Cloudflare 盾 |
-| 10026 | 海盗船 | HTML | 可用 | 993ms | HTTP 200 可达 |
-| 10027 | 磁力多 | HTML | 可用 | 550ms | HTTP 200 可达 |
-| 10028 | 磁狐搜索 | HTML | 可用 | 573ms | HTTP 200 可达 |
-| 10029 | SKrBT | HTML | 可用 | 323ms | HTTP 200 可达 |
-| 10030 | SoKitty | HTML | 可用 | 127ms | HTTP 200 可达 |
-| 10031 | 52BT | HTML | 剔除 | 125ms | HTTP 403 Cloudflare 盾 |
-| 10032 | 天天磁力 | HTML | 可用 | 565ms | HTTP 200 可达 |
-| 10033 | BT联盟 | HTML | 可用 | 596ms | HTTP 200 可达 |
-| 10034 | 磁力狐 | HTML | 可用 | 723ms | HTTP 200 可达 |
-| 10035 | 磁力搜索 | HTML | 可用 | 384ms | HTTP 200 可达 |
-| 10036 | BTSOW | HTML | 可用 | 552ms | HTTP 200 可达 |
-| 10037 | 磁力星球 | HTML | 可用 | 560ms | HTTP 200 可达 |
-| 10038 | 吃力网分享 | HTML | 可用 | 424ms | HTTP 200 可达 |
-| 10039 | 高清族 | HTML | 剔除 | 1108ms | HTTP 403 |
-| 10040 | Btkitty | HTML | 剔除 | 1075ms | HTTP 404 |
-| 10041 | 磁力片 | HTML | 可用 | 223ms | HTTP 200 可达 |
-| 10101 | 海盗湾 API | JSON_API | 可用 | 127ms | 命中 100 条 |
-| 10102 | Nyaa 动漫 RSS | RSS | 可用 | 1126ms | 命中 1 条 |
-| 10103 | 动漫花园 RSS | RSS | 可用 | 314ms | 命中 2 条 |
-| 10104 | AnimeTosho API | JSON_API | 剔除 | 320ms | 网络异常: <urlopen error [Errno -2] Name or service not known> |
-| 10201 | Uindex | HTML | 剔除 | 111ms | HTTP 403 Cloudflare 盾 |
-| 10202 | Nyaa.si | HTML | 剔除 | 517ms | HTTP 400 |
-| 10203 | Tokyo Toshokan | HTML | 剔除 | 123ms | HTTP 403 Cloudflare 盾 |
-| 10204 | dmhy | HTML | 可用 | 182ms | HTTP 200 可达 |
-| 10205 | EZTV | HTML | 剔除 | 117ms | HTTP 403 Cloudflare 盾 |
-| 10206 | LimeTorrents | HTML | 可用 | 660ms | HTTP 200 可达 |
-| 10207 | The Pirate Bay | JSON_API | 可用 | 298ms | 命中 100 条 |
-| 10208 | 1337x | HTML | 剔除 | 104ms | HTTP 403 Cloudflare 盾 |
-| 10209 | ACG.RIP | HTML | 可用 | 739ms | HTTP 200 可达 |
-| 10210 | 0Magnet | HTML | 可用 | 369ms | HTTP 200 可达 |
-| 10211 | Magnet Cat | HTML | 剔除 | 45ms | 网络异常: <urlopen error [Errno -2] Name or service not known> |
+| 10001 | SOBT | HTML | 剔除 | 934ms | HTTP 404 |
+| 10002 | 磁力引擎搜索 | HTML | 可用 | 333ms | HTTP 200 可达 |
+| 10003 | 磁力宝 | HTML | 剔除 | 113ms | HTTP 403 |
+| 10004 | 磁力猫 | HTML | 剔除 | 996ms | HTTP 404 |
+| 10005 | 磁力狗 | HTML | 剔除 | 1135ms | HTTP 404 |
+| 10006 | btfox | HTML | 剔除 | 43ms | 网络异常: <urlopen error [Errno -2] Name or service not known> |
+| 10007 | ØMagnet | HTML | 可用 | 507ms | HTTP 200 可达 |
+| 10008 | 种子吧 | HTML | 剔除 | 45ms | 网络异常: <urlopen error [Errno -2] Name or service not known> |
+| 10009 | 1024BT | HTML | 剔除 | 92ms | HTTP 403 Cloudflare 盾 |
+| 10010 | 吃力网 | HTML | 剔除 | 108ms | HTTP 403 Cloudflare 盾 |
+| 10011 | 磁力树 | HTML | 剔除 | 86ms | HTTP 403 Cloudflare 盾 |
+| 10012 | 小草磁力 | HTML | 剔除 | 411ms | HTTP 403 Cloudflare 盾 |
+| 10013 | BT目录 | HTML | 剔除 | 81ms | HTTP 403 Cloudflare 盾 |
+| 10014 | 简单动漫 | HTML | 剔除 | 466ms | HTTP 404 |
+| 10016 | torrentkitty | HTML | 剔除 | 62ms | HTTP 403 Cloudflare 盾 |
+| 10017 | 吴签磁力 | HTML | 可用 | 1453ms | HTTP 200 可达 |
+| 10018 | 种子搜 | HTML | 剔除 | 1471ms | HTTP 404 |
+| 10019 | 磁力爬 | HTML | 可用 | 460ms | HTTP 200 可达 |
+| 10020 | BTMirror | HTML | 剔除 | 833ms | HTTP 401 |
+| 10022 | 磁力海 | HTML | 可用 | 217ms | HTTP 200 可达 |
+| 10023 | 飞鱼磁力 | HTML | 剔除 | 712ms | HTTP 403 Cloudflare 盾 |
+| 10024 | 动漫花园 | HTML | 可用 | 667ms | HTTP 200 可达 |
+| 10025 | 磁力天堂 | HTML | 剔除 | 100ms | HTTP 403 Cloudflare 盾 |
+| 10026 | 海盗船 | HTML | 可用 | 1058ms | HTTP 200 可达 |
+| 10027 | 磁力多 | HTML | 可用 | 569ms | HTTP 200 可达 |
+| 10028 | 磁狐搜索 | HTML | 可用 | 598ms | HTTP 200 可达 |
+| 10029 | SKrBT | HTML | 可用 | 286ms | HTTP 200 可达 |
+| 10030 | SoKitty | HTML | 可用 | 205ms | HTTP 200 可达 |
+| 10031 | 52BT | HTML | 剔除 | 86ms | HTTP 403 Cloudflare 盾 |
+| 10032 | 天天磁力 | HTML | 可用 | 597ms | HTTP 200 可达 |
+| 10033 | BT联盟 | HTML | 可用 | 597ms | HTTP 200 可达 |
+| 10034 | 磁力狐 | HTML | 可用 | 753ms | HTTP 200 可达 |
+| 10035 | 磁力搜索 | HTML | 可用 | 394ms | HTTP 200 可达 |
+| 10036 | BTSOW | HTML | 可用 | 583ms | HTTP 200 可达 |
+| 10037 | 磁力星球 | HTML | 可用 | 584ms | HTTP 200 可达 |
+| 10038 | 吃力网分享 | HTML | 可用 | 389ms | HTTP 200 可达 |
+| 10039 | 高清族 | HTML | 剔除 | 1111ms | HTTP 403 |
+| 10040 | Btkitty | HTML | 剔除 | 1328ms | HTTP 404 |
+| 10041 | 磁力片 | HTML | 可用 | 232ms | HTTP 200 可达 |
+| 10101 | 海盗湾 API | JSON_API | 可用 | 299ms | 命中 100 条 |
+| 10102 | Nyaa 动漫 RSS | RSS | 可用 | 400ms | 命中 1 条 |
+| 10103 | 动漫花园 RSS | RSS | 可用 | 510ms | 命中 2 条 |
+| 10104 | AnimeTosho API | JSON_API | 剔除 | 104ms | 网络异常: <urlopen error [Errno -2] Name or service not known> |
+| 10201 | Uindex | HTML | 剔除 | 76ms | HTTP 403 Cloudflare 盾 |
+| 10202 | Nyaa.si | HTML | 剔除 | 756ms | HTTP 400 |
+| 10203 | Tokyo Toshokan | HTML | 剔除 | 102ms | HTTP 403 Cloudflare 盾 |
+| 10204 | dmhy | HTML | 可用 | 147ms | HTTP 200 可达 |
+| 10205 | EZTV | HTML | 剔除 | 49ms | HTTP 403 Cloudflare 盾 |
+| 10206 | LimeTorrents | HTML | 可用 | 293ms | HTTP 200 可达 |
+| 10207 | The Pirate Bay | JSON_API | 可用 | 269ms | 命中 100 条 |
+| 10208 | 1337x | HTML | 剔除 | 57ms | HTTP 403 Cloudflare 盾 |
+| 10209 | ACG.RIP | HTML | 可用 | 841ms | HTTP 200 可达 |
+| 10210 | 0Magnet | HTML | 可用 | 469ms | HTTP 200 可达 |
+| 10211 | Magnet Cat | HTML | 剔除 | 92ms | HTTP 403 Cloudflare 盾 |
